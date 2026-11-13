@@ -38,14 +38,14 @@ body.immersive #result .news-modal{width:min(930px,98vw);max-height:96dvh;paddin
 /* The live HUD contains exactly three metrics; interaction is screen-wide. */
 body.immersive .shell{padding:0;gap:0;background:#9bb4aa}
 body.immersive header,body.immersive .intro,body.immersive .stats,body.immersive .controls,body.immersive .foot{display:none!important}
-.minimal-hud{position:absolute;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:5;width:min(580px,calc(100% - 24px));display:grid;grid-template-columns:1fr 1.5fr;gap:5px;padding:10px 12px;background:#152b30dc;border:1px solid #f0e8cb26;border-radius:12px;backdrop-filter:blur(9px);pointer-events:none;text-align:center}
-.minimal-hud>div{min-width:0}.minimal-hud span{display:block;font-size:8px;letter-spacing:1.3px;color:#bbc8bf;margin-bottom:3px}.minimal-hud strong{display:block;font:700 27px 'Barlow Condensed',Impact,sans-serif;color:#f6efda;font-variant-numeric:tabular-nums;line-height:1.05}.minimal-hud>div:nth-child(2) strong{color:#e0ff99}
+.minimal-hud{position:absolute;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));z-index:5;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:0;background:none;pointer-events:none}
+.minimal-hud>div{min-width:0;display:flex;align-items:center;gap:9px;padding:7px 10px;background:#152b30c9;border:1px solid #f0e8cb20;border-radius:8px;backdrop-filter:blur(6px)}.minimal-hud span{display:block;font-size:7px;letter-spacing:.8px;color:#bbc8bf;margin:0}.minimal-hud strong{display:block;font:700 23px 'Barlow Condensed',Impact,sans-serif;color:#f6efda;font-variant-numeric:tabular-nums;line-height:1.05}.minimal-hud>div:first-child strong{font-size:19px;white-space:nowrap}.minimal-hud>div:nth-child(2) strong{color:#e0ff99}
 body.immersive main{padding:0;min-height:0}body.immersive .arena{border:0;width:100%;height:100%;min-height:0;border-radius:0}
 .map-tag,.scene-info,.reticle,.north,.status{display:none!important}
 .float-combo,.float-combo.show{top:auto;left:12px;right:auto;bottom:max(14px,env(safe-area-inset-bottom));transform:none!important;text-align:left;max-width:220px;padding:7px 10px;background:#172c30c9;border-radius:7px;pointer-events:none}
 .float-combo strong{font-size:16px!important;line-height:1.1;text-shadow:none}.float-combo span{font-size:7px;letter-spacing:.6px;max-width:200px;margin-top:3px;line-height:1.3}
-@media(orientation:portrait){.minimal-hud{padding:10px 8px;width:calc(100% - 20px);gap:3px}.minimal-hud span{font-size:7px;letter-spacing:.8px}.minimal-hud strong{font-size:26px}.float-combo,.float-combo.show{max-width:190px}.float-combo strong{font-size:14px!important}.float-combo span{font-size:6px}body.immersive #result .news-modal{max-height:94dvh}.news-monitor img{object-fit:contain;background:#9db7ac}.news-studio{height:190px}.news-content .result-score{font-size:43px}.news-content h2{font-size:24px}.news-content .launch{height:42px;min-width:0}.news-content .launch b{font-size:17px}.session-card h2{font-size:48px}.session-card p{font-size:12px}}
-@media(max-height:450px) and (orientation:landscape){.minimal-hud{top:max(5px,env(safe-area-inset-top));padding:5px 10px;width:420px}.minimal-hud strong{font-size:22px}.minimal-hud span{font-size:6px;margin-bottom:1px}}
+@media(orientation:portrait){.minimal-hud{gap:12px}.minimal-hud>div{padding:6px 8px;gap:6px}.minimal-hud span{font-size:7px;letter-spacing:.8px}.minimal-hud strong{font-size:21px}.float-combo,.float-combo.show{max-width:190px}.float-combo strong{font-size:14px!important}.float-combo span{font-size:6px}body.immersive #result .news-modal{max-height:94dvh}.news-monitor img{object-fit:contain;background:#9db7ac}.news-studio{height:190px}.news-content .result-score{font-size:43px}.news-content h2{font-size:24px}.news-content .launch{height:42px;min-width:0}.news-content .launch b{font-size:17px}.session-card h2{font-size:48px}.session-card p{font-size:12px}}
+@media(max-height:450px) and (orientation:landscape){.minimal-hud{top:max(5px,env(safe-area-inset-top))}.minimal-hud>div{padding:5px 8px;gap:7px}.minimal-hud strong{font-size:22px}.minimal-hud span{font-size:6px;margin-bottom:1px}}
 
 
 #rotateGate{z-index:100}#rotateGate .phone{animation:turn-phone 1.8s ease-in-out infinite}@keyframes turn-phone{0%,25%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
@@ -2164,7 +2164,7 @@ function collectSceneObjects(scene){
   for(const item of scene.cranes){const s=item.s||scenery[item.index];if(s)appendCraneRenderParts(objects,s,item.tilt,item.direction)}
   for(const c of scene.cars){
     if(!replayView&&(Math.abs(c.x)>=845||c.y<=-490||c.y>=530))continue;
-    add(vehicleRenderBounds(c),()=>{drawCar(c);drawBurningTankers([c])});
+    add(vehicleRenderBounds(c),()=>{drawCar(c);drawVehicleNightLights(c);drawBurningTankers([c])});
   }
   for(const p of [...scene.people,...scene.riders])add(personRenderBounds(p),()=>pedestrian(p));
   for(const p of scene.pipes)add(pipeRenderBounds(p),()=>drawPipe(p));
@@ -2515,6 +2515,7 @@ function trafficLight(x,y){
 }
 function drawNightGroundLights(scene){
   if(!SUN.night)return;
+  drawVehicleLowBeams(scene);
   const lights=activeNightLamps();
   for(const lamp of lights){
     const lx=lamp.x+40,ly=lamp.y,lz=122,p=project(lx,ly,.6),r=185*scale;
@@ -2537,6 +2538,64 @@ function drawNightGroundLights(scene){
     }
     ctx.restore();
   }
+}
+
+function vehicleLightLayout(c){
+  if(c.exploded||c.cargo)return{front:[],rear:[]};
+  let front=c.l/2-(c.damage||0)/100*9+1,rear=-c.l/2-1.5,frontZ=14.5,rearZ=13,spacing=c.w*.34,backModel=c;
+  if(c.kind==='truck'){front=c.l*.31+22;frontZ=18;rearZ=15;spacing=14}
+  if(c.kind==='garbage'){front=62;frontZ=18;rearZ=16;spacing=14}
+  if(c.kind==='mixer'){front=59;frontZ=18;rear=-59.5;rearZ=15;spacing=14}
+  if(c.kind==='tanker'){front=70;frontZ=18;rear=-71.5;rearZ=15;spacing=14}
+  if(c.kind==='semi'){front=111;frontZ=19.5;rear=-80.5;rearZ=17;spacing=15;backModel=trailerModel(c)}
+  if(c.kind==='moto')return{front:[{model:c,u:15.8,v:0,z:21.5,width:2.3}],rear:[{model:c,u:-15.5,v:0,z:15,width:1.8}]};
+  return{front:[-spacing,spacing].map(v=>({model:c,u:front,v,z:frontZ,width:2.5})),rear:[-spacing,spacing].map(v=>({model:backModel,u:rear,v,z:rearZ,width:2.4}))};
+}
+function drawVehicleNightLights(c){
+  if(!SUN.night||shadowPass||c.exploded)return;
+  const layout=vehicleLightLayout(c);
+  for(const [end,color]of [['front','#fff0bd'],['rear','#ff4435']])for(const lamp of layout[end]){
+    const {model,u,v,z,width}=lamp,normal=end==='front'?1:-1;
+    if(!facesViewer(Math.cos(model.angle)*normal,Math.sin(model.angle)*normal,model.x,model.y))continue;
+    let points=[carPoint(model,u,v-width,z-1.5),carPoint(model,u,v+width,z-1.5),carPoint(model,u,v+width,z+1.5),carPoint(model,u,v-width,z+1.5)];
+    if(replayView)points=clipSecurityPolygon(points);if(points.length<3)continue;
+    // The lens emits light directly; ambient moonlight must not dim it.
+    ctx.save();ctx.fillStyle=color;ctx.beginPath();points.forEach((point,i)=>{const p=project(...point);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});ctx.closePath();ctx.fill();ctx.restore();
+    const p=carPoint(model,u,v,z);glowAt(...p,end==='front'?7:5,color,end==='front'?.48:.40);
+  }
+}
+function lowBeamClearDistance(origin,dx,dy,maxDistance,owner,vehicles){
+  let distance=maxDistance;
+  const test=(body,zMin=0,zMax=80)=>{
+    if(zMin>12||zMax<1)return;
+    const co=Math.cos(body.angle||0),si=Math.sin(body.angle||0),x=(origin[0]-body.x)*co+(origin[1]-body.y)*si,y=-(origin[0]-body.x)*si+(origin[1]-body.y)*co,ux=dx*co+dy*si,uy=-dx*si+dy*co;
+    let lo=0,hi=distance;
+    for(const [p,v,half]of [[x,ux,body.l/2+1],[y,uy,body.w/2+1]]){
+      if(Math.abs(v)<.00001){if(p< -half||p>half)return}
+      else{let a=(-half-p)/v,b=(half-p)/v;if(a>b)[a,b]=[b,a];lo=Math.max(lo,a);hi=Math.min(hi,b);if(lo>hi)return}
+    }
+    if(hi>=0&&lo<distance)distance=Math.max(0,lo-1);
+  };
+  for(const c of vehicles)if(c!==owner)test(c,c.z,c.z+c.h);
+  for(const s of scenery){if(s.destroyed||s.groundOnly)continue;for(const b of s.colliders||[sceneBounds.get(s)])if(b)test({x:b.x+b.w/2,y:b.y+b.d/2,l:b.w,w:b.d,angle:0},b.zMin||0,b.zMax??s.h)}
+  return distance;
+}
+function drawVehicleLowBeams(scene){
+  if(!SUN.night)return;
+  let boundary=[[-830,-470,.7],[830,-470,.7],[830,510,.7],[-830,510,.7]];if(replayView)boundary=clipSecurityPolygon(boundary);if(boundary.length<3)return;
+  ctx.save();ctx.beginPath();boundary.forEach((point,i)=>{const p=project(...point);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});ctx.closePath();ctx.clip();
+  for(const c of scene.cars){
+    if(c.exploded||c.cargo||c.fallen||c.rollover||(c.z||0)>10||Math.abs(c.x)>=845||c.y<=-490||c.y>=530)continue;
+    const dx=Math.cos(c.angle),dy=Math.sin(c.angle),layout=vehicleLightLayout(c);
+    for(const lamp of layout.front){
+      const origin=carPoint(lamp.model,lamp.u+2,lamp.v,0),length=lowBeamClearDistance(origin,dx,dy,c.kind==='moto'?72:92,c,scene.cars);if(length<3)continue;
+      const point=(u,v)=>[origin[0]+dx*u-dy*v,origin[1]+dy*u+dx*v,.75],start=project(...point(0,0)),end=project(...point(length,0));
+      const width=3+length*.16;let points=[point(0,-2),point(length,-width),point(length,width),point(0,2)];if(replayView)points=clipSecurityPolygon(points);if(points.length<3)continue;
+      ctx.save();ctx.globalCompositeOperation='screen';const gradient=ctx.createLinearGradient(start.x,start.y,end.x,end.y);gradient.addColorStop(0,'#fff0b42b');gradient.addColorStop(.35,'#fff0b43d');gradient.addColorStop(.78,'#ffecc215');gradient.addColorStop(1,'#ffecc200');ctx.fillStyle=gradient;
+      ctx.beginPath();points.forEach((point,i)=>{const p=project(...point);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});ctx.closePath();ctx.fill();ctx.restore();
+    }
+  }
+  ctx.restore();
 }
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
