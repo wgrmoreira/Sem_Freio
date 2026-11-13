@@ -2515,7 +2515,6 @@ function trafficLight(x,y){
 }
 function drawNightGroundLights(scene){
   if(!SUN.night)return;
-  drawVehicleLowBeams(scene);
   const lights=activeNightLamps();
   for(const lamp of lights){
     const lx=lamp.x+40,ly=lamp.y,lz=122,p=project(lx,ly,.6),r=185*scale;
