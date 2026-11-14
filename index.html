@@ -399,7 +399,7 @@ for(let i=0;i<3;i++){const o=audio.createOscillator(),m=audio.createGain(),t=now
 function updateSoundUI(){$('sound').setAttribute('aria-label',soundOn?'Desativar som':'Ativar som');$('sound').title=soundOn?'Desativar som':'Ativar som';$('soundPath').setAttribute('d',soundOn?'M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14':'m17 9 5 6m0-6-5 6');$('sound').style.color=soundOn?'var(--lime)':''}
 function toggleSound(){soundOn=!soundOn;initAudio();updateSoundUI();if(master)master.gain.setTargetAtTime(soundOn?.65:0,audio.currentTime,.02)}
 function collision(a,b){const dx=b.x-a.x,dy=b.y-a.y;if(Math.abs(dx)>(a.l+b.l)*.62||Math.abs(dy)>(a.l+b.l)*.62)return null;let depth=Infinity,nx=0,ny=0;const aa=Math.cos(a.angle),ab=Math.sin(a.angle),ba=Math.cos(b.angle),bb=Math.sin(b.angle);for(const [x,y]of [[aa,ab],[-ab,aa],[ba,bb],[-bb,ba]]){let r1=Math.abs(x*aa+y*ab)*a.l/2+Math.abs(-x*ab+y*aa)*a.w/2,r2=Math.abs(x*ba+y*bb)*b.l/2+Math.abs(-x*bb+y*ba)*b.w/2;let dist=dx*x+dy*y,overlap=r1+r2-Math.abs(dist);if(overlap<=0)return null;if(overlap<depth){depth=overlap;const sign=dist<0?-1:1;nx=x*sign;ny=y*sign}}return{depth,nx,ny}}
-function impact(a,b,c){const {nx,ny,depth}=c,invA=1/a.mass,invB=1/b.mass,sum=invA+invB;a.x-=nx*depth*invA/sum*1.005;a.y-=ny*depth*invA/sum*1.005;b.x+=nx*depth*invB/sum*1.005;b.y+=ny*depth*invB/sum*1.005;const relative=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(relative>0)return;const force=-relative;if(state==='running'){detachImpactWheels(a,force,nx,ny);detachImpactWheels(b,force,-nx,-ny)}if(state==='running'&&(a.affected||b.affected||firstCrashAt!==null||force>=35)){tryRollover(a,-nx,-ny,force);tryRollover(b,nx,ny,force)}const impulse=force*1.32/sum;a.vx-=impulse*nx*invA;a.vy-=impulse*ny*invA;b.vx+=impulse*nx*invB;b.vy+=impulse*ny*invB;if(force<35)return;const relevant=state==='running';if(!relevant)return;registerFuelImpact(a,b,force);registerFuelImpact(b,a,force);a.affected=b.affected=true;if(firstCrashAt===null){firstCrashAt=elapsed;crashFocus={x:(a.x+b.x)/2,y:(a.y+b.y)/2}}let newCars=0;for(const car of [a,b]){let d=Math.min(100-car.damage,force*.15);car.damage+=d;if(!car.cargo)damageTotal+=d;if(!car.hit&&!car.player&&!car.cargo){car.hit=true;hitCount++;newCars++}if(car.kind==='semi')releasePipes(car,force);if(car.kind==='moto')ejectRider(car,force);car.flash=.15;car.omega+=rand(-1.5,1.5)*Math.min(2,force/240);car.vz=Math.max(car.vz,Math.min(85,force*.13));if(force>=480)explodeVehicle(car,force);}
+function impact(a,b,c){const {nx,ny,depth}=c,invA=1/a.mass,invB=1/b.mass,sum=invA+invB;a.x-=nx*depth*invA/sum*1.005;a.y-=ny*depth*invA/sum*1.005;b.x+=nx*depth*invB/sum*1.005;b.y+=ny*depth*invB/sum*1.005;const relative=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(relative>0)return;const force=-relative;if(state==='running'){detachImpactWheels(a,force,nx,ny);detachImpactWheels(b,force,-nx,-ny)}const impulse=force*1.32/sum;a.vx-=impulse*nx*invA;a.vy-=impulse*ny*invA;b.vx+=impulse*nx*invB;b.vy+=impulse*ny*invB;if(state==='running'&&(a.affected||b.affected||firstCrashAt!==null||force>=35)){tryRollover(a,-nx,-ny,force);tryRollover(b,nx,ny,force)}if(force<35)return;const relevant=state==='running';if(!relevant)return;registerFuelImpact(a,b,force);registerFuelImpact(b,a,force);a.affected=b.affected=true;if(firstCrashAt===null){firstCrashAt=elapsed;crashFocus={x:(a.x+b.x)/2,y:(a.y+b.y)/2}}let newCars=0;for(const car of [a,b]){let d=Math.min(100-car.damage,force*.15);car.damage+=d;if(!car.cargo)damageTotal+=d;if(!car.hit&&!car.player&&!car.cargo){car.hit=true;hitCount++;newCars++}if(car.kind==='semi')releasePipes(car,force);if(car.kind==='moto')ejectRider(car,force);car.flash=.15;car.omega+=rand(-1.5,1.5)*Math.min(2,force/240);car.vz=Math.max(car.vz,Math.min(85,force*.13));if(force>=480)explodeVehicle(car,force);}
 if(!a.soundContacts)a.soundContacts=new WeakMap();if(worldTime-(a.soundContacts.get(b)??-99)>.09){a.soundContacts.set(b,worldTime);crashSound(force)}
 if(newCars||force>=35){combo=worldTime-lastHit<1.7?Math.min(6,combo+.4):1;maxCombo=Math.max(maxCombo,combo);lastHit=worldTime;let points=Math.round((force*5+newCars*800)*combo);score+=points;const x=(a.x+b.x)/2,y=(a.y+b.y)/2;pointLabel(x,y,points,'COLISÃO','#e1ffa1');rings.push({x,y,life:.4});emitDebris(x,y,force,a.color);shake=Math.min(12,force/50);if(newCars&&hitCount>=2){$('comboPop').classList.add('show');$('comboPop').querySelector('strong').textContent=hitCount>=7?'DESTRUIÇÃO TOTAL':hitCount>=4?'EFEITO DOMINÓ':'REAÇÃO EM CADEIA';popTimer=1.4}if(hitCount===1){hitStop=.065;$('status').textContent='✦ IMPACTO! DEIXE A FÍSICA TRABALHAR'}updateHUD();}}
 function emitDebris(x,y,force,color){for(let k=0;k<Math.min(36,12+force/20);k++){let a=rand(0,TAU),v=rand(45,180);particles.push({x,y,z:rand(8,30),vx:Math.cos(a)*v,vy:Math.sin(a)*v,vz:rand(45,170),life:rand(.5,1.5),max:1.5,size:rand(1,4),color:k%3===0?color:k%3===1?'#ffe397':'#a0d7d4',type:k%3===1?'spark':'debris'})}}
@@ -431,7 +431,7 @@ for(const c of cars){updateRecklessCar(c,dt);brakeAccidentVehicle(c,dt);c.x+=c.v
 }
 for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++){const a=cars[i],b=cars[j],contact=collision(a,b);if(contact)impact(a,b,contact)}cars=cars.filter(c=>c.player||Math.abs(c.x)<1600&&Math.abs(c.y)<1000);
 updateCity(dt);resolvePhysicalPenetrations();recordReplayFrame(dt);
-for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.type!=='smoke'){p.vz-=260*dt;if(p.z<1){p.z=1;p.vz*=-.25;p.vx*=.8;p.vy*=.8}}else{p.size+=dt*(p.soot?10:8);p.vz+=dt*(p.soot?9:3)}}particles=particles.filter(p=>p.life>0);for(const m of marks)m.life-=dt;marks=marks.filter(m=>m.life>0);for(const l of labels){l.life-=dt;l.z+=dt*48}labels=labels.filter(l=>l.life>0);for(const r of rings)r.life-=dt;rings=rings.filter(r=>r.life>0);shake*=Math.exp(-10*dt);popTimer-=dt;if(popTimer<0)$('comboPop').classList.remove('show');if(worldTime-lastHit>2&&combo!==1){combo=1;updateHUD()}
+for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.type!=='smoke'){p.vz-=260*dt;if(p.z<1){p.z=1;p.vz*=-.25;p.vx*=.8;p.vy*=.8}}else{p.size+=dt*(p.dust?10:p.soot?10:8);if(p.dust){p.vz-=dt*14;p.vx*=Math.exp(-.75*dt);p.vy*=Math.exp(-.75*dt);if(p.z<3){p.z=3;p.vz=0}}else p.vz+=dt*(p.soot?9:3)}}particles=particles.filter(p=>p.life>0);for(const m of marks)m.life-=dt;marks=marks.filter(m=>m.life>0);for(const l of labels){l.life-=dt;l.z+=dt*48}labels=labels.filter(l=>l.life>0);for(const r of rings)r.life-=dt;rings=rings.filter(r=>r.life>0);shake*=Math.exp(-10*dt);popTimer-=dt;if(popTimer<0)$('comboPop').classList.remove('show');if(worldTime-lastHit>2&&combo!==1){combo=1;updateHUD()}
 if(checkRoundInactivity())return;
 updateAccidentCompletion(dt);
 }
@@ -673,10 +673,11 @@ function destroyScenery(s,c,force){
     const a=rand(0,TAU),speed=rand(15,80)+force*.12;
     rubble.push({x:rand(b.x,b.x+b.w),y:rand(b.y,b.y+b.d),z:rand(4,Math.min(s.h,130)),vx:Math.cos(a)*speed+c.vx*.15,vy:Math.sin(a)*speed+c.vy*.15,vz:rand(20,100),size:rand(3,s.h>150?17:9),angle:rand(0,TAU),color:colors[i%3]});
   }
+  if(s.isBuilding)emitBuildingDust(s,b,force);
   if(rubble.length>15300)rubble.splice(0,rubble.length-15300);
   emitDebris(c.x,c.y,force,colors[0]);
   if(firstCrashAt===null){firstCrashAt=elapsed;crashFocus={x:c.x,y:c.y}}
-  c.affected=true;c.damage=Math.min(100,c.damage+8);damageTotal+=8;if(c.kind==='tanker')igniteFuelTank(c);
+  c.affected=true;c.damage=Math.min(100,c.damage+8);damageTotal+=8;if(c.kind==='tanker'){igniteFuelTank(c);if(s.isBuilding&&!c.exploded){c.fuelArmed=true;c.fuelExplodeAt=elapsed;detonateFuelTank(c)}}
   if(c.kind==='semi')releasePipes(c,force);if(c.kind==='moto')ejectRider(c,force);if(force>=480)explodeVehicle(c,force);
   const points=Math.round((s.h>150?900:tree?230:160)*combo);score+=points;pointLabel(b.x+b.w/2,b.y+b.d/2,points,s.isBuilding?'PRÉDIO DESTRUÍDO':'CENÁRIO DESTRUÍDO','#a9e6de');
   crashSound(Math.max(80,force));shake=Math.max(shake,Math.min(9,force/45));updateHUD();
@@ -745,7 +746,11 @@ function tryRollover(c,nx,ny,force){
   if(c.kind==='moto'||c.kind==='semi'||c.kind==='tanker'||c.cargo||c.rollover||force<360)return;
   const lateral=-Math.sin(c.angle)*nx+Math.cos(c.angle)*ny;
   if(force<520&&Math.abs(lateral)<.72)return;
-  c.rollover=true;c.roll=0;c.rollBaseW=c.w;c.rollSign=lateral>0?1:-1;
+  const lateralTravel=-Math.sin(c.angle)*c.vx+Math.cos(c.angle)*c.vy;
+  // Positive roll rotates the roof toward negative local Y. Match the roof's
+  // motion to the vehicle's post-impact lateral travel, with impulse fallback.
+  const tumbleDirection=Math.abs(lateralTravel)>8?lateralTravel:lateral;
+  c.rollover=true;c.roll=0;c.rollBaseW=c.w;c.rollSign=tumbleDirection>0?-1:1;
   c.rollTarget=c.rollSign*(force>=520?Math.PI*5:Math.PI);c.rollSpeed=force>=520?clamp(force/65,8,13):clamp(force/90,4,8);
   c.affected=true;c.vz=Math.max(c.vz,Math.min(110,force*.15));
   const points=Math.round(750*combo);score+=points;pointLabel(c.x,c.y,points,'CAPOTAMENTO','#ffd18b');updateHUD();
@@ -2734,6 +2739,14 @@ function drawCinematicAtmosphere(){
   // Floating motes are purely decorative and do not create simulation particles.
   for(let i=0;i<18;i++){const x=seeded(i,701)*W+Math.sin(worldTime*.12+i)*8,y=(seeded(i,702)*H-worldTime*(.35+seeded(i,703))%H+H)%H,a=.06+seeded(i,704)*.12;ctx.fillStyle=night?'rgba(178,199,221,'+a*.35+')':'rgba(255,226,169,'+a+')';ctx.beginPath();ctx.arc(x,y,(.4+seeded(i,705)*.7)*Math.min(1.5,DPR),0,TAU);ctx.fill()}
   ctx.restore();
+}
+
+function emitBuildingDust(s,b,force){
+  const count=s.h>150?144:100;
+  for(let i=0;i<count;i++){
+    const x=b.x+seeded(i,s.x)*b.w,y=b.y+seeded(i,s.y+17)*b.d,angle=seeded(i,s.x+s.y+33)*TAU,speed=14+seeded(i,force+27)*40,life=2.2+seeded(i,s.h+51)*2.2;
+    particles.push({x,y,z:3+seeded(i,s.y+29)*Math.min(s.h*.48,85),vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,vz:14+seeded(i,s.x+71)*27,life,max:life,size:17+seeded(i,s.y+75)*22,color:i%3?'#eeeae1':'#faf7ef',type:'smoke',dust:true});
+  }
 }
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
