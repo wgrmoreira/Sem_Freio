@@ -686,12 +686,12 @@ function destroyScenery(s,c,force){
   s.destroyed=true;sceneryCache.delete(s);navRevision++;if(s.category==='hydrant')addWaterSource(s.x,s.y,1,s.x+s.y);if(s.category==='crane')toppleCrane(s,c);
   const b=sceneBounds.get(s),wood=s.material==='wood',tree=s.material==='tree',metal=s.material==='metal';
   const colors=tree?['#7c9e45','#9ab94e','#79644c']:metal?['#798b8d','#b7c1bb','#566970']:wood?['#c1a16d','#91784f','#d2b782']:['#c7bda4','#928f80','#aaa68f'];
-  const count=s.isBuilding||s.category==='gasStation'?(s.h>150?756:288):tree?20:metal?12:16;
+  const count=s.isBuilding||s.category==='gasStation'?Math.round((s.h>150?756:288)*.8):tree?20:metal?12:16;
   for(let i=0;i<count;i++){
     const a=rand(0,TAU),speed=rand(15,80)+force*.12;
-    rubble.push({x:rand(b.x,b.x+b.w),y:rand(b.y,b.y+b.d),z:rand(4,Math.min(s.h,130)),vx:Math.cos(a)*speed+c.vx*.15,vy:Math.sin(a)*speed+c.vy*.15,vz:rand(20,100),size:rand(3,s.h>150?17:9),angle:rand(0,TAU),color:colors[i%3]});
+    rubble.push({x:rand(b.x,b.x+b.w),y:rand(b.y,b.y+b.d),z:rand(4,Math.min(s.h,130)),vx:Math.cos(a)*speed+c.vx*.15,vy:Math.sin(a)*speed+c.vy*.15,vz:rand(20,100),size:rand(3,s.h>150?17:9)*(s.isBuilding||s.category==='gasStation'?1.05:1),angle:rand(0,TAU),color:colors[i%3]});
   }
-  if(s.isBuilding){emitBuildingDust(s,b,force);addBrokenBuildingPipes(s,b)}
+  if(s.isBuilding)emitBuildingDust(s,b,force);
   if(s.category==='gasStation'){emitBuildingDust(s,b,force);startStationDemolitionSmoke(s)}
   if(rubble.length>15300)rubble.splice(0,rubble.length-15300);
   emitDebris(c.x,c.y,force,colors[0]);
@@ -1479,6 +1479,7 @@ function drawConstructionCrane(s,tilt=0,direction={x:1,y:0},enqueue=null){
 }
 
 const SECURITY_POLE={x:-510,y:240,z:140};
+let replayLastPaintAt=-Infinity;
 let replayFrames=[],replayActive=false,replayView=false,replayClock=0,replayIndex=0,replayLastRender=-1,lastReplayCapture=-1,replayCaptureInterval=1/12;
 const cameraForward=(()=>{const x=-SECURITY_POLE.x,y=-SECURITY_POLE.y,z=15-SECURITY_POLE.z,l=Math.hypot(x,y,z);return{x:x/l,y:y/l,z:z/l}})();
 const cameraRight=(()=>{const l=Math.hypot(cameraForward.x,cameraForward.y);return{x:cameraForward.y/l,y:-cameraForward.x/l,z:0}})();
@@ -1562,6 +1563,7 @@ function continueAfterCrash(){
 }
 function renderSecurityReplay(){
   if(!replayFrames.length||replayLastRender===replayIndex)return;
+  const paintAt=performance.now();if(replayLastRender!==-1&&paintAt-replayLastPaintAt<1000/12)return;replayLastPaintAt=paintAt;
   replayLastRender=replayIndex;const frame=replayFrames[replayIndex],oldScale=scale,oldTime=worldTime,oldBlood=bloodMarks,oldEffects=explosionEffects,liveDestroyed=scenery.map(s=>s.destroyed);
   const visibleFrame=cctvVisibleScene(frame);
   replayView=true;worldTime=frame.worldTime;bloodMarks=visibleFrame.blood;explosionEffects=visibleFrame.effects;
@@ -2838,6 +2840,7 @@ function drawCCTVPresentation(frame){
     cctvScreenImage=image;
   }
   ctx.save();ctx.drawImage(cctvScreenImage,0,0,W,H);ctx.restore();
+  drawCCTVInterference(frame);
   drawCCTVLargeOSD(frame);
 }
 
@@ -2948,7 +2951,6 @@ function drawHydrant(s){
   for(const side of [-1,1])box(x+side*5-2,y-3,5,6,5,'#d99651','#a66b3f','#c98647',13);line([x-4,y,23],[x+4,y,23],'#ecc67d',1);
 }
 function addWaterSource(x,y,power,seed){waterSources.push({x,y,power,seed,bornAt:worldTime,height:power> .8?112:32+seeded(seed,19)*14})}
-function addBrokenBuildingPipes(s,b){const count=2+Math.floor(seeded(s.x,s.y)*3);for(let i=0;i<count;i++)addWaterSource(b.x+10+seeded(i,s.x)*Math.max(1,b.w-20),b.y+10+seeded(i,s.y)*Math.max(1,b.d-20),.35,s.x+s.y+i*17)}
 function drawWaterSource(source){drawFountainWater(source)}
 function stationColliders(s){const out=[];for(const u of [8,s.w-35])for(const v of [6,48])out.push({x:s.x+u,y:s.y+v,w:6,d:6,zMax:61});for(const u of [52,110,168])out.push({x:s.x+u,y:s.y+26,w:8,d:14,zMax:27});out.push({x:s.x+s.w-85,y:s.y+s.d-38,w:83,d:37,zMax:44},{x:s.x+3,y:s.y+2,w:s.w-29,d:58,zMin:61,zMax:69});return out}
 function drawGasStation(s){
@@ -3135,6 +3137,19 @@ function installViewportGuards(){
   screen.orientation?.addEventListener?.('change',stabilizeGameViewport);
   window.addEventListener('pageshow',stabilizeGameViewport);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)stabilizeGameViewport()});
+}
+
+const crtNoiseTiles=[],crtNoisePatterns=new WeakMap();
+function drawCCTVInterference(frame){
+  if(!crtNoiseTiles.length)for(let phase=0;phase<4;phase++){
+    const tile=document.createElement('canvas');tile.width=128;tile.height=128;const c=tile.getContext('2d'),data=c.createImageData(128,128);
+    for(let i=0;i<128*128;i++){const light=seeded(i,phase+827)>.5,v=light?230:8;data.data[i*4]=v;data.data[i*4+1]=light?245:17;data.data[i*4+2]=light?237:22;data.data[i*4+3]=Math.floor(seeded(i,phase+829)*13)}c.putImageData(data,0,0);crtNoiseTiles.push(tile);
+  }
+  let patterns=crtNoisePatterns.get(ctx);if(!patterns){patterns=crtNoiseTiles.map(tile=>ctx.createPattern(tile,'repeat'));crtNoisePatterns.set(ctx,patterns)}
+  ctx.save();ctx.fillStyle=patterns[Math.floor(frame.time*12)%4];ctx.fillRect(0,0,W,H);
+  // A narrow rolling interference band evokes an analog surveillance monitor.
+  // Only cached noise and a few rectangles are drawn; no full-frame blur/filter.
+  const y=(frame.time*37)%(H+24)-24,g=ctx.createLinearGradient(0,y,0,y+17);g.addColorStop(0,'#c7ebdc00');g.addColorStop(.65,'#c7ebdc12');g.addColorStop(1,'#c7ebdc00');ctx.fillStyle=g;ctx.fillRect(0,y,W,17);ctx.fillStyle='#d7f5e818';ctx.fillRect(0,y+13,W,1);ctx.restore();
 }
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
