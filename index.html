@@ -275,7 +275,7 @@ for(let x of [-820,-520,-260,180,440,700])for(let y of [-150,146])box(x,y,78,5,4
 groundRect(-790,-425,620,245,'#c0bba9');groundRect(180,182,600,285,'#c0bba9');groundRect(-765,190,600,270,'#bdb9a7');groundRect(175,-425,600,245,'#c2bcaa');
 for(let x=-740;x<800;x+=58){if(Math.abs(x)<160)continue;line([x,182,.3],[x,460,.3],'#94a38c13');line([x,-425,.3],[x,-182,.3],'#94a38c13')}
 // Low retaining walls at the perimeter.
-box(-820,-458,1640,11,12,'#c9ccb4','#8d9f8d','#a4b19a');box(805,-445,12,943,12,'#c9ccb4','#8d9f8d','#a4b19a');
+for(const [x,y,w,d]of [[-820,-458,710,11],[110,-458,710,11],[805,-445,12,289],[805,156,12,342]])box(x,y,w,d,12,'#c9ccb4','#8d9f8d','#a4b19a');
 for(let x of [-710,-425,260,620]){groundRect(x,-210,75,35,'#9caa88');groundRect(x,190,75,40,'#9caa88')}
 drawSurfacePatina();drawLeisureGrounds();
 // Launch markings and pulsing guidance path.
@@ -1540,21 +1540,18 @@ function continueAfterCrash(){
 function renderSecurityReplay(){
   if(!replayFrames.length||replayLastRender===replayIndex)return;
   replayLastRender=replayIndex;const frame=replayFrames[replayIndex],oldScale=scale,oldTime=worldTime,oldBlood=bloodMarks,oldEffects=explosionEffects,liveDestroyed=scenery.map(s=>s.destroyed);
-  replayView=true;worldTime=frame.worldTime;bloodMarks=frame.blood;explosionEffects=frame.effects;
+  const visibleFrame=cctvVisibleScene(frame);
+  replayView=true;worldTime=frame.worldTime;bloodMarks=visibleFrame.blood;explosionEffects=visibleFrame.effects;
   for(let i=0;i<scenery.length;i++)scenery[i].destroyed=frame.destroyed[i];
   try{
     ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);ctx.fillStyle=SUN.sky;ctx.fillRect(0,0,W,H);
-    const focal=Math.min(W*.90,H*1.65);scale=focal/650;drawGround();drawNightGroundLights(frame);drawSunShadows(frame);drawContactOcclusion(frame);drawBloodMarks();
-    for(const m of frame.marks)line([m.x-11*Math.cos(m.a),m.y-11*Math.sin(m.a),.4],[m.x+11*Math.cos(m.a),m.y+11*Math.sin(m.a),.4],'#263b3a80',4);
-    for(const object of sortSceneObjects(collectSceneObjects(frame))){scale=clamp(focal/object.depth,.18,2.2);object.draw()}
+    prepareCCTVCache();
+    const focal=Math.min(W*.90,H*1.65);scale=focal/650;drawReplayGround();drawNightGroundLights(visibleFrame);drawSunShadows(visibleFrame);drawContactOcclusion(visibleFrame);drawBloodMarks();
+    for(const m of visibleFrame.marks)line([m.x-11*Math.cos(m.a),m.y-11*Math.sin(m.a),.4],[m.x+11*Math.cos(m.a),m.y+11*Math.sin(m.a),.4],'#263b3a80',4);
+    for(const object of sortSceneObjects(collectSceneObjects(visibleFrame))){scale=clamp(focal/object.depth,.18,2.2);object.draw()}
     scale=focal/650;ctx.globalAlpha=1;
     drawCinematicAtmosphere();
-    // Fixed-camera presentation; no live game shake, zoom or simulation runs here.
-    ctx.fillStyle='#0b202812';for(let y=0;y<H;y+=4)ctx.fillRect(0,y,W,1);
-    const seconds=Math.floor(frame.time),clock=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
-    ctx.fillStyle='#0b1c29ce';ctx.fillRect(12,12,250,46);ctx.fillStyle='#f6f2dc';ctx.font='bold 12px monospace';ctx.textAlign='left';ctx.fillText('CÂMERA 01 • REPLAY',22,30);ctx.font='10px monospace';ctx.fillText('CRUZAMENTO / '+clock,22,47);
-    ctx.fillStyle='#ed514a';ctx.beginPath();ctx.arc(W-24,24,4,0,TAU);ctx.fill();
-    if(replayIndex===replayFrames.length-1){ctx.fillStyle='#10272adb';ctx.fillRect(W/2-95,H-83,190,26);ctx.fillStyle='#f4ecd7';ctx.font='bold 11px monospace';ctx.textAlign='center';ctx.fillText('REPLAY CONCLUÍDO',W/2,H-66)}
+    drawCCTVPresentation(frame);
   }finally{
     replayView=false;worldTime=oldTime;scale=oldScale;bloodMarks=oldBlood;explosionEffects=oldEffects;
     for(let i=0;i<scenery.length;i++)scenery[i].destroyed=liveDestroyed[i];
@@ -2058,11 +2055,15 @@ function vehicleRenderBounds(c){
   return renderBounds(points);
 }
 function appendCraneRenderParts(objects,s,tilt=0,direction={x:1,y:0}){
+  const cached=replayView&&tilt===0?cctvCraneGeometry.get(s):null;
+  if(cached){objects.push(...cached);return}
+  const first=objects.length;
   drawConstructionCrane(s,tilt,direction,(points,draw)=>{
     const bounds=renderBounds(points),x=(bounds.minX+bounds.maxX)/2,y=(bounds.minY+bounds.maxY)/2,z=(bounds.minZ+bounds.maxZ)/2;
     const depth=replayView?securityDepth(x,y,z):x+y+z*1.6;
     if(!replayView||depth>35)objects.push({depth,bounds,cranePart:true,draw});
   });
+  if(replayView&&tilt===0)cctvCraneGeometry.set(s,objects.slice(first));
 }
 function projectedRenderBounds(b){
   if(!replayView){const p=project((b.minX+b.maxX)/2,(b.minY+b.maxY)/2,(b.minZ+b.maxZ)/2),horizontal=(b.maxX-b.minX+b.maxY-b.minY)/2,dx=horizontal*.866*scale+2,dy=(horizontal*.5+(b.maxZ-b.minZ)/2)*scale+2;return{left:p.x-dx,right:p.x+dx,top:p.y-dy,bottom:p.y+dy}}
@@ -2116,7 +2117,7 @@ function sceneOcclusionOrder(a,b){
 }
 function sortSceneObjects(objects){
   objects.sort((a,b)=>replayView?b.depth-a.depth:a.depth-b.depth);
-  const nodes=objects.map((o,index)=>({o,index,edges:[],incoming:0,done:false,screen:o.bounds?projectedRenderBounds(o.bounds):null}));
+  const nodes=objects.map((o,index)=>({o,index,edges:[],incoming:0,done:false,screen:o.bounds?projectedRenderBounds(o.bounds):null})).filter(n=>!replayView||!n.screen||n.screen.right>=0&&n.screen.left<=W&&n.screen.bottom>=0&&n.screen.top<=H);
   const visible=nodes.filter(n=>n.screen&&!n.o.fragment).sort((a,b)=>a.screen.left-b.screen.left);
   const addEdge=(a,b)=>{a.edges.push(b);b.incoming++};
   const compare=(a,b)=>{const order=sceneOcclusionOrder(a.o.bounds,b.o.bounds);if(order<0)addEdge(a,b);else if(order>0)addEdge(b,a)};
@@ -2169,7 +2170,7 @@ function collectSceneObjects(scene){
     if(s.destroyed||s.groundOnly||replayView&&s.category==='securityCamera')continue;
     if(s.category==='crane')appendCraneRenderParts(objects,s);
     else if(s.category==='gate')appendGateRenderParts(objects,s);
-    else add(sceneryRenderBounds(s),()=>{if(replayView){s.f();drawSceneryFinish(s)}else drawScenery(s);if(s.category==='lamp')drawNightLamp(s)});
+    else add(sceneryRenderBounds(s),()=>{if(replayView)drawReplayScenery(s);else drawScenery(s);if(s.category==='lamp')drawNightLamp(s)});
   }
   for(const item of scene.cranes){const s=item.s||scenery[item.index];if(s)appendCraneRenderParts(objects,s,item.tilt,item.direction)}
   for(const c of scene.cars){
@@ -2179,7 +2180,7 @@ function collectSceneObjects(scene){
   for(const p of [...scene.people,...scene.riders])add(personRenderBounds(p),()=>pedestrian(p));
   for(const p of scene.pipes)add(pipeRenderBounds(p),()=>drawPipe(p));
   for(const w of scene.wheels||[])add(looseWheelRenderBounds(w),()=>drawLooseWheel(w));
-  for(const r of scene.rubble)add(rubbleRenderBounds(r),()=>drawRubble(r),true);
+  for(const r of scene.rubble)add(rubbleRenderBounds(r),()=>replayView?drawReplayRubble(r):drawRubble(r),true);
   for(const b of scene.pigeons){const r=b.flying?19:10;add(solidRenderBounds(b.x-r,b.y-r,r*2,r*2,b.z-8,30),()=>drawPigeon(b))}
   for(const p of scene.particles){const r=p.size;add(solidRenderBounds(p.x-r,p.y-r,r*2,r*2,p.z-r,r*2),()=>drawSceneParticle(p),true)}
   for(const effect of scene.effects){
@@ -2612,7 +2613,8 @@ function drawVehicleLowBeams(scene){
 const visualGroundCache=new Map(),visualRGB=new Map();
 const vehicleFinishCache=new Map();
 function drawFinishedVehicle(c){
-  if(replayView||c.player||['moto','mixer','semi'].includes(c.kind)||c.rollover){drawCar(c);drawVehicleFinish(c);return}
+  if(replayView){drawReplayVehicle(c);return}
+  if(c.player||['moto','mixer','semi'].includes(c.kind)||c.rollover){drawCar(c);drawVehicleFinish(c);return}
   const light=SUN.night?Math.round(nightLampContribution(c.x,c.y,18,0,0,1)*8):0,key=[SUN.key,scale,DPR,c.kind,c.color,c.l,c.w,c.h,Math.round(c.angle*40),Math.round(c.damage/2),c.flash>0?1:0,c.detachedWheels||0,c.taxi,c.school,c.lane,c.cruise,light].join('|'),p=project(c.x,c.y,c.z||0);
   let cached=vehicleFinishCache.get(key);
   if(!cached){
@@ -2747,6 +2749,100 @@ function emitBuildingDust(s,b,force){
     const x=b.x+seeded(i,s.x)*b.w,y=b.y+seeded(i,s.y+17)*b.d,angle=seeded(i,s.x+s.y+33)*TAU,speed=14+seeded(i,force+27)*40,life=2.2+seeded(i,s.h+51)*2.2;
     particles.push({x,y,z:3+seeded(i,s.y+29)*Math.min(s.h*.48,85),vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,vz:14+seeded(i,s.x+71)*27,life,max:life,size:17+seeded(i,s.y+75)*22,color:i%3?'#eeeae1':'#faf7ef',type:'smoke',dust:true});
   }
+}
+
+// Full-resolution caches for the fixed CCTV camera. Draw ordering and recorded
+// simulation snapshots stay unchanged; moving entities are still drawn live.
+const cctvSpriteCache=new Map(),cctvCraneGeometry=new WeakMap();
+let cctvCachePixels=0,cctvCacheEpoch='',cctvGroundImage=null,cctvScreenImage=null,cctvLightSignature='',cctvGroundLightKey='';
+function cctvEnvironmentKey(){return[citySerial,SUN.key,W,H,DPR].join('|')}
+function prepareCCTVCache(){
+  cctvLightSignature=scenery.filter(s=>s.category==='lamp').map(s=>s.destroyed?1:0).join('');
+  const key=cctvEnvironmentKey();if(key===cctvCacheEpoch)return;
+  cctvSpriteCache.clear();cctvCachePixels=0;cctvGroundImage=null;cctvScreenImage=null;cctvCacheEpoch=key;
+}
+function cctvLampState(){return cctvLightSignature}
+function drawReplayVehicle(c){
+  if(Math.hypot(c.vx,c.vy)>.2||Math.abs(c.omega||0)>.03||(c.z||0)>.5||c.rollover&&!c.rollLanded||['moto','mixer','semi'].includes(c.kind)){drawCar(c);drawVehicleFinish(c);return}
+  const key=['v',c.kind,c.x,c.y,c.z,c.angle,c.roll,c.rollLift,c.w,c.l,c.h,c.color,c.damage,c.flash>0,c.detachedWheels,c.taxi,c.school,c.lane,c.cruise,cctvLightSignature].join('|');
+  const bounds=vehicleRenderBounds(c);bounds.minX-=6;bounds.maxX+=6;bounds.minY-=6;bounds.maxY+=6;bounds.minZ-=2;bounds.maxZ+=20;
+  drawCCTVCached(key,bounds,()=>{drawCar(c);drawVehicleFinish(c)});
+}
+function drawCCTVCached(key,bounds,draw){
+  let entry=cctvSpriteCache.get(key);
+  if(!entry){
+    const screen=projectedRenderBounds(bounds),left=Math.max(0,Math.floor(screen.left)-2),top=Math.max(0,Math.floor(screen.top)-2),right=Math.min(W,Math.ceil(screen.right)+2),bottom=Math.min(H,Math.ceil(screen.bottom)+2),width=right-left,height=bottom-top;
+    if(width<=0||height<=0)return;
+    const image=document.createElement('canvas');image.width=Math.ceil(width*DPR);image.height=Math.ceil(height*DPR);const pixels=image.width*image.height;
+    // Bound GPU/native memory without downscaling any cached image.
+    if(pixels>8000000){draw();return}
+    const original=ctx;ctx=image.getContext('2d');ctx.setTransform(DPR,0,0,DPR,-left*DPR,-top*DPR);
+    try{draw()}finally{ctx=original}
+    while(cctvCachePixels+pixels>8000000&&cctvSpriteCache.size){const oldest=cctvSpriteCache.keys().next().value;cctvCachePixels-=cctvSpriteCache.get(oldest).pixels;cctvSpriteCache.delete(oldest)}
+    entry={image,left,top,width,height,pixels};cctvSpriteCache.set(key,entry);cctvCachePixels+=pixels;
+  }
+  ctx.drawImage(entry.image,entry.left,entry.top,entry.width,entry.height);
+}
+function drawReplayScenery(s){
+  if(s.category==='signal'){s.f();return}
+  const index=scenery.indexOf(s),key='s|'+index+'|'+cctvLampState();
+  drawCCTVCached(key,sceneryRenderBounds(s),()=>{s.f();drawSceneryFinish(s)});
+}
+function drawReplayRubble(r){
+  if(r.z!==0||Math.hypot(r.vx,r.vy)>.2||Math.abs(r.vz)>1){drawRubble(r);return}
+  const key=['r',r.x,r.y,r.size,r.color,cctvLampState()].join('|');drawCCTVCached(key,rubbleRenderBounds(r),()=>drawRubble(r));
+}
+function drawReplayGround(){
+  if(cctvGroundLightKey!==cctvLightSignature){cctvGroundImage=null;cctvGroundLightKey=cctvLightSignature}
+  if(!cctvGroundImage){const original=ctx,image=document.createElement('canvas');image.width=Math.round(W*DPR);image.height=Math.round(H*DPR);ctx=image.getContext('2d');ctx.setTransform(DPR,0,0,DPR,0,0);try{drawGround()}finally{ctx=original}cctvGroundImage=image}
+  ctx.drawImage(cctvGroundImage,0,0,W,H);
+}
+function drawCCTVPresentation(frame){
+  if(!cctvScreenImage){
+    const image=document.createElement('canvas');image.width=Math.round(W*DPR);image.height=Math.round(H*DPR);const c=image.getContext('2d');c.setTransform(DPR,0,0,DPR,0,0);
+    // The CRT treatment is a cached transparent overlay, never a blur/filter
+    // over the world. Full scene resolution and recorded frame rate are kept.
+    c.fillStyle='#020b160c';for(let y=0;y<H;y+=4)c.fillRect(0,y,W,1);
+    const edge=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.68);edge.addColorStop(0,'#00071100');edge.addColorStop(1,'#00071138');c.fillStyle=edge;c.fillRect(0,0,W,H);
+    c.strokeStyle='#c2efdd70';c.lineWidth=1;const margin=18,length=Math.min(24,W*.04);
+    for(const x of [margin,W-margin])for(const y of [margin,H-margin]){const dx=x===margin?1:-1,dy=y===margin?1:-1;c.beginPath();c.moveTo(x,y+dy*length);c.lineTo(x,y);c.lineTo(x+dx*length,y);c.stroke()}
+    cctvScreenImage=image;
+  }
+  ctx.save();ctx.drawImage(cctvScreenImage,0,0,W,H);ctx.restore();
+  drawCCTVLargeOSD(frame);
+}
+
+
+function cctvPointInsideMap(p){return p.x>=-830&&p.x<=830&&p.y>=-470&&p.y<=510}
+function cctvVisibleScene(frame){
+  // Filter world positions, not the projected ground silhouette: tall buildings,
+  // cranes and airborne objects on the map must retain their full height.
+  const visible={...frame};
+  visible.cars=frame.cars.filter(c=>{const b=vehicleRenderBounds(c);return b.minX>=-830&&b.maxX<=830&&b.minY>=-470&&b.maxY<=510});
+  for(const key of ['people','riders','pipes','rubble','pigeons','particles','effects','wheels','blood','marks'])visible[key]=(frame[key]||[]).filter(cctvPointInsideMap);
+  visible.cranes=(frame.cranes||[]).filter(item=>{const s=item.s||scenery[item.index];return s&&cctvPointInsideMap(s)});
+  return visible;
+}
+function cctvHUDLayout(){
+  const compact=H<420,font=Math.round(Math.min(compact?22:30,Math.max(compact?18:22,W*.022))),pad=compact?24:32;
+  return{font,pad,leftWidth:Math.min(W*.48,font*14),rightWidth:Math.min(W*.36,font*10.6),height:font*2.8};
+}
+function drawCCTVLargeOSD(frame){
+  const {font,pad,leftWidth,rightWidth,height}=cctvHUDLayout(),right=W-pad;
+  ctx.save();ctx.textBaseline='top';ctx.shadowColor='#000b';ctx.shadowBlur=3;
+  ctx.fillStyle='#04141bd1';ctx.fillRect(pad-10,pad-8,leftWidth,height);ctx.fillRect(right-rightWidth+10,pad-8,rightWidth,height);
+  ctx.textAlign='left';ctx.fillStyle='#e5f7ed';ctx.font='bold '+font+'px monospace';ctx.fillText('CAM 01 / CRUZAMENTO',pad,pad);
+  ctx.font=Math.max(11,font-9)+'px monospace';ctx.fillStyle='#bcd9cf';ctx.fillText('REPLAY · CÂMERA DE VIGILÂNCIA',pad,pad+font+13);
+  const total=SUN.hour*3600+Math.floor(frame.time),time=[Math.floor(total/3600)%24,Math.floor(total/60)%60,total%60].map(n=>String(n).padStart(2,'0')).join(':');
+  ctx.textAlign='right';ctx.font='bold '+(font-2)+'px monospace';ctx.fillStyle='#f2f9f5';ctx.fillText('REC · GRAVAÇÃO',right,pad);
+  ctx.fillStyle=Math.floor(frame.time*2)%2?'#a73f3f':'#ff625b';ctx.beginPath();ctx.arc(right-rightWidth+font*.8,pad+font*.45,Math.max(5,font*.24),0,TAU);ctx.fill();
+  ctx.font='bold '+(font+5)+'px monospace';ctx.fillStyle='#e7fff0';ctx.fillText(time,right,pad+font+9);
+  const last=replayFrames[replayFrames.length-1].time,format=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s)%60).padStart(2,'0'),barWidth=Math.min(300,W*.31),footerFont=Math.max(14,font-6);
+  ctx.textAlign='left';ctx.font='bold '+footerFont+'px monospace';ctx.fillStyle='#071820b8';ctx.fillRect(pad-9,H-pad-footerFont-24,Math.max(barWidth+18,footerFont*15),footerFont+33);
+  ctx.fillStyle='#ddf4e6';ctx.fillText('CH 01  |  '+format(frame.time)+' / '+format(last),pad,H-pad-footerFont-15);
+  ctx.fillStyle='#b5d6c14f';ctx.fillRect(pad,H-pad-5,barWidth,4);ctx.fillStyle='#d5ffe5';ctx.fillRect(pad,H-pad-5,barWidth*Math.min(1,frame.time/Math.max(.01,last)),4);
+  if(replayIndex===replayFrames.length-1){const width=Math.min(W*.6,font*14);ctx.textAlign='center';ctx.font='bold '+font+'px monospace';ctx.fillStyle='#06151be0';ctx.fillRect(W/2-width/2,H-112,width,font+18);ctx.fillStyle='#e4f5e9';ctx.fillText('FIM DA GRAVAÇÃO',W/2,H-104)}
+  ctx.restore();
 }
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
