@@ -311,7 +311,7 @@ function spawnCar(x,y,dir,recklessTarget=null){
   const aftermath=firstCrashAt!==null;
   if(aftermath&&postCrashArrivals>=postCrashLimit)return null;
   const r=Math.random();
-  const kind=recklessTarget?'car':r<.09&&worldTime>=nextSemiAt&&cars.filter(c=>c.kind==='semi').length<2?'semi':r<.18?'moto':r<.225?'schoolBus':r<.27?'bus':r<.37?'van':r<.42?'garbage':r<.47?'mixer':r<.495&&tankersSpawned<2&&worldTime>=nextTankerAt&&cars.filter(c=>c.kind==='tanker').length<2?'tanker':r<.54125?'truck':r<.5875?'ambulance':r<.63375?'police':r<.68?'carrier':'car';
+  const kind=recklessTarget?'truck':r<.09&&worldTime>=nextSemiAt&&cars.filter(c=>c.kind==='semi').length<2?'semi':r<.18?'moto':r<.225?'schoolBus':r<.27?'bus':r<.37?'van':r<.42?'garbage':r<.47?'mixer':r<.495&&tankersSpawned<2&&worldTime>=nextTankerAt&&cars.filter(c=>c.kind==='tanker').length<2?'tanker':r<.54125?'truck':r<.5875?'ambulance':r<.63375?'police':r<.68?'carrier':'car';
   const c=makeCar(x,y,dir>0?0:Math.PI,nextVehicleColor(),kind);
   c.cautiousArrival=aftermath&&!recklessTarget;c.gentleOffset=rand(-7,7);c.evasionMode=c.cautiousArrival?'brake':Math.random()<.24?'sidewalk':Math.random()<.55?'lane':'brake';
   if(c.taxi)c.color='#edca32';
@@ -449,7 +449,7 @@ for(const c of cars){if(c.offCliff||c.sunk)continue;updateRecklessCar(c,dt);brak
 }
 solveTramCouplers(dt);for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++){const a=cars[i],b=cars[j],contact=collision(a,b);if(contact)impact(a,b,contact)}cars=cars.filter(c=>c.player||Math.abs(c.x)<1600&&Math.abs(c.y)<1000);
 updateCity(dt);resolvePhysicalPenetrations();recordReplayFrame(dt);
-for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.type!=='smoke'){p.vz-=260*dt;if(p.z<mapParticleFloor(p)){p.z=mapParticleFloor(p);p.vz*=-.25;p.vx*=.8;p.vy*=.8}}else{p.size+=dt*(p.dust?10:p.soot?10:8);if(p.dust){p.vz-=dt*14;p.vx*=Math.exp(-.75*dt);p.vy*=Math.exp(-.75*dt);if(p.z<(p.beachDust?coastReceiverHeight(p.x,p.y)+2:3)){p.z=p.beachDust?coastReceiverHeight(p.x,p.y)+2:3;p.vz=0}}else p.vz+=dt*(p.soot?9:3)}}particles=particles.filter(p=>p.life>0);for(const m of marks)if(!m.persistent)m.life-=dt;marks=marks.filter(m=>m.persistent||m.life>0);for(const l of labels){l.life-=dt;l.z+=dt*48}labels=labels.filter(l=>l.life>0);for(const r of rings)r.life-=dt;rings=rings.filter(r=>r.life>0);shake*=Math.exp(-10*dt);popTimer-=dt;if(popTimer<0)$('comboPop').classList.remove('show');if(worldTime-lastHit>2&&combo!==1){combo=1;updateHUD()}
+for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.type!=='smoke'){p.vz-=260*dt;if(p.type==='debris'&&isCoastalWater(p.x,p.y)){p.vx*=Math.exp(-2*dt);p.vy*=Math.exp(-2*dt);if(p.z+p.size<DEBRIS_SEA_LEVEL-3)p.life=0}else if(p.z<mapParticleFloor(p)){p.z=mapParticleFloor(p);p.vz*=-.25;p.vx*=.8;p.vy*=.8}}else{p.size+=dt*(p.dust?10:p.soot?10:8);if(p.dust){p.vz-=dt*14;p.vx*=Math.exp(-.75*dt);p.vy*=Math.exp(-.75*dt);if(p.z<(p.beachDust?coastReceiverHeight(p.x,p.y)+2:3)){p.z=p.beachDust?coastReceiverHeight(p.x,p.y)+2:3;p.vz=0}}else p.vz+=dt*(p.soot?9:3)}}particles=particles.filter(p=>p.life>0);for(const m of marks)if(!m.persistent)m.life-=dt;marks=marks.filter(m=>m.persistent||m.life>0);for(const l of labels){l.life-=dt;l.z+=dt*48}labels=labels.filter(l=>l.life>0);for(const r of rings)r.life-=dt;rings=rings.filter(r=>r.life>0);shake*=Math.exp(-10*dt);popTimer-=dt;if(popTimer<0)$('comboPop').classList.remove('show');if(worldTime-lastHit>2&&combo!==1){combo=1;updateHUD()}
 if(checkRoundInactivity())return;
 updateAccidentCompletion(dt);
 }
@@ -733,7 +733,7 @@ function updateCity(dt){
 
     separatePerson(p);updatePedestrianEscapeProgress(p,dt);updateBodyBlood(p);if(p.rider)updateRiderDistance(p);
   }
-  for(const r of rubble){r.x+=r.vx*dt;r.y+=r.vy*dt;r.vz-=240*dt;r.z+=r.vz*dt;if(r.z<(activeMap===3?coastReceiverHeight(r.x,r.y):0)){r.z=activeMap===3?coastReceiverHeight(r.x,r.y):0;r.vz=0;r.vx*=Math.exp(-6*dt);r.vy*=Math.exp(-6*dt)}}
+  for(const r of rubble){if(updateSeaDebris(r,dt,0,Math.max(2,r.size*.6)))continue;r.x+=r.vx*dt;r.y+=r.vy*dt;r.vz-=240*dt;r.z+=r.vz*dt;if(r.z<(activeMap===3?coastReceiverHeight(r.x,r.y):0)){r.z=activeMap===3?coastReceiverHeight(r.x,r.y):0;r.vz=0;r.vx*=Math.exp(-6*dt);r.vy*=Math.exp(-6*dt)}}
 }
 function prepareNews(total){
   const shot=[...newsShots].sort((a,b)=>b.score-a.score)[0];
@@ -2209,8 +2209,8 @@ function collectSceneObjects(scene){
   }
   for(const p of [...scene.people,...scene.riders])add(personRenderBounds(p),()=>pedestrian(p));
   for(const p of scene.pipes)add(pipeRenderBounds(p),()=>drawPipe(p));
-  for(const w of scene.wheels||[])add(looseWheelRenderBounds(w),()=>drawLooseWheel(w));
-  for(const r of scene.rubble)add(rubbleRenderBounds(r),()=>replayView?drawReplayRubble(r):drawRubble(r),true);
+  for(const w of scene.wheels||[])if(!w.seaSunk)add(looseWheelRenderBounds(w),()=>drawLooseWheel(w));
+  for(const r of scene.rubble)if(!r.seaSunk)add(rubbleRenderBounds(r),()=>replayView?drawReplayRubble(r):drawRubble(r),true);
   for(const b of scene.pigeons){const r=b.flying?19:10;add(solidRenderBounds(b.x-r,b.y-r,r*2,r*2,b.z-8,30),()=>drawPigeon(b))}
   for(const p of scene.particles){const r=p.size;add(solidRenderBounds(p.x-r,p.y-r,r*2,r*2,p.z-r,r*2),()=>drawSceneParticle(p),true)}
   for(const source of scene.waterSources||[])add(solidRenderBounds(source.x-32,source.y-32,64,64,0,source.height+5),()=>drawWaterSource(source));
@@ -3450,15 +3450,15 @@ function configureMapCamera(){
 }
 function replayFocalLength(){return activeMap===3?Math.min(W*.63,H):Math.min(W*.90,H*1.65)}
 function makeTramWagon(x,dir,trainId,unit){
-  return{...makeCar(x,-238,dir>0?0:Math.PI,'#e0e3dc','bus'),kind:'tram',l:112,w:35,h:66,mass:7.5,cruise:142,dir,vx:dir*142,vy:0,tram:true,trainId,tramUnit:unit,tramCabEnd:unit===0?1:-1,affected:false};
+  return{...makeCar(x,-238,dir>0?0:Math.PI,'#e0e3dc','bus'),kind:'tram',l:112,w:35,h:66,mass:7.5,cruise:355,dir,vx:dir*355,vy:0,tram:true,trainId,tramUnit:unit,tramCabEnd:unit===0?1:unit===2?-1:0,affected:false};
 }
 function spawnArticulatedTram(){
-  const dir=tramTrafficDirection(),id=++tramSerial,lead=makeTramWagon(-dir*980,dir,id,0),rear=makeTramWagon(lead.x-dir*122,dir,id,1);
-  if([lead,rear].some(w=>cars.some(c=>!c.sunk&&Math.abs(c.x-w.x)<(c.l+w.l)/2+18&&Math.abs(c.y-w.y)<(c.w+w.w)/2+8)))return false;
-  cars.push(lead,rear);tramsSpawned++;nextTramAt=worldTime+rand(5.5,9);return true;
+  const dir=tramTrafficDirection(),id=++tramSerial,wagons=Array.from({length:3},(_,unit)=>makeTramWagon(-dir*(980+unit*122),dir,id,unit));
+  if(wagons.some(w=>cars.some(c=>!c.sunk&&Math.abs(c.x-w.x)<(c.l+w.l)/2+18&&Math.abs(c.y-w.y)<(c.w+w.w)/2+8)))return false;
+  cars.push(...wagons);tramsSpawned++;nextTramAt=worldTime+rand(5.5,9);return true;
 }
 function tramCouplers(sceneCars=cars){
-  const pairs=[];for(const lead of sceneCars)if(lead.tram&&lead.tramUnit===0&&!lead.couplerBroken){const rear=sceneCars.find(c=>c.tram&&c.trainId===lead.trainId&&c.tramUnit===1&&!c.couplerBroken);if(rear)pairs.push([lead,rear])}return pairs;
+  const pairs=[];for(const lead of sceneCars)if(lead.tram&&!lead.couplerBroken){const rear=sceneCars.find(c=>c.tram&&c.trainId===lead.trainId&&c.tramUnit===lead.tramUnit+1&&!c.couplerBroken);if(rear)pairs.push([lead,rear])}return pairs.sort((a,b)=>a[0].trainId-b[0].trainId||a[0].tramUnit-b[0].tramUnit);
 }
 function solveTramCouplers(dt,velocity=true){
   for(const [a,b]of tramCouplers()){
@@ -3467,7 +3467,7 @@ function solveTramCouplers(dt,velocity=true){
     if(distance<.001)continue;
     const nx=dx/distance,ny=dy/distance,error=distance-10,wa=1/a.mass,wb=1/b.mass,total=wa+wb;
     // A pin joint transmits tension but leaves the two chassis free to yaw and
-    // roll independently. Gentle slack avoids a visually rigid two-car sprite.
+    // roll independently. Gentle slack keeps all three carriages articulated.
     const correction=clamp(error*.72,-9,22);a.x+=nx*correction*wa/total;a.y+=ny*correction*wa/total;b.x-=nx*correction*wb/total;b.y-=ny*correction*wb/total;
     if(velocity){
       const separating=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny,impulse=clamp((separating*.45+error*2.5)/total,-250,250);
@@ -3489,8 +3489,7 @@ function derailArticulatedTram(c,nx,ny,force){
     if(force>180){c.rollover=true;c.roll=0;c.rollBaseW=35;c.rollSign=ny*Math.cos(c.angle)-nx*Math.sin(c.angle)>0?-1:1;c.rollTarget=c.rollSign*Math.PI*.47;c.rollSpeed=1.9;c.rollLanded=false}
     const points=Math.round(700*combo);score+=points;pointLabel(c.x,c.y,points,'CAPOTAMENTO');updateHUD();
   }
-  const mate=cars.find(w=>w.tram&&w.trainId===c.trainId&&w!==c);
-  if(mate&&!mate.derailed){mate.derailed=true;mate.affected=true;mate.cruise=0;mate.omega-=c.omega*.16;const points=Math.round(700*combo);score+=points;pointLabel(mate.x,mate.y,points,'CAPOTAMENTO');updateHUD()}
+  for(const mate of cars)if(mate.tram&&mate.trainId===c.trainId&&mate!==c&&!mate.derailed){mate.derailed=true;mate.affected=true;mate.cruise=0;mate.omega-=c.omega*.16/(Math.abs(mate.tramUnit-c.tramUnit)||1);const points=Math.round(700*combo);score+=points;pointLabel(mate.x,mate.y,points,'CAPOTAMENTO');updateHUD()}
 }
 function updateTramMotion(dt){
   if(worldTime>=nextTramAt&&canTramEnter()&&(firstCrashAt===null||elapsed-firstCrashAt<2))spawnArticulatedTram();
@@ -3520,8 +3519,8 @@ function tramBodyMesh(c,rings,top,side,front){
 }
 function tramBox(c,u,v,l,w,z,h,top,side,front){const pts=chamfer(u,v,l,w,2);tramBodyMesh(c,[{pts,z},{pts,z:z+h}],top,side,front)}
 function drawRioTram(c){
-  const end=c.tramCabEnd||1,white=c.exploded?'#696f6b':'#e1e4dc',side=shade(white,.82),glass='#203e50';
-  const outline=[[-56,-12],[-49,-17],[46,-17],[54,-12],[56,-5],[56,5],[54,12],[46,17],[-49,17],[-56,12]].map(([u,v])=>[u*end,v]);
+  const cabEnd=c.tramCabEnd??(c.tramUnit===0?1:-1),end=cabEnd||1,white=c.exploded?'#696f6b':'#e1e4dc',side=shade(white,.82),glass='#203e50';
+  const outline=(cabEnd===0?chamfer(-56,-17,112,34,3):[[-56,-12],[-49,-17],[46,-17],[54,-12],[56,-5],[56,5],[54,12],[46,17],[-49,17],[-56,12]]).map(([u,v])=>[u*end,v]);
   if(end<0)outline.reverse();
   // All side panels use their physical normals. The reverse direction exposes
   // the rear surface rather than painting a front bumper over the far face.
@@ -3543,7 +3542,7 @@ function drawRioTram(c){
     for(let i=0;i<5;i++){const u=-43+i*4;carPoly(c,[[u,s*17.35,13],[u+3,s*17.35,13],[u+12,s*17.35,24],[u+9,s*17.35,24]],['#429cb9','#62ac76','#b8c657','#e9b957','#8698c2'][i])}
   }
   const cabNormal=end,frontVisible=facesViewer(Math.cos(c.angle)*end,Math.sin(c.angle)*end,c.x,c.y);
-  if(frontVisible){
+  if(cabEnd!==0&&frontVisible){
     carPoly(c,[[end*55,-10,23],[end*55,10,23],[end*53,11,48],[end*53,-11,48]],'#173c50');
     carPoly(c,[[end*55,-9,25],[end*55,9,25],[end*53.1,9,45],[end*53.1,-9,45]],'#41677a');
     line(carPoint(c,end*55.3,-6,28),carPoint(c,end*54,5,39),'#172b32',1.1);
@@ -3635,22 +3634,22 @@ function drawSeaVehicle(c){
   const radius=Math.max(c.l,c.w)*.54;for(let i=0;i<8;i++){const a=i/8*TAU,b=a+.28;line([c.x+Math.cos(a)*radius,c.y+Math.sin(a)*radius*.45,-144.7],[c.x+Math.cos(b)*radius,c.y+Math.sin(b)*radius*.45,-144.7],'#c7e8dd88',1.2)}
 }
 function drawPatrolHelicopter(){
-  const c={x:SECURITY_POLE.x+Math.sin(worldTime*.7)*3,y:SECURITY_POLE.y+Math.cos(worldTime*.6)*3,z:SECURITY_POLE.z+Math.sin(worldTime*1.3)*2,angle:Math.atan2(coastRoadY(slideX)-SECURITY_POLE.y,slideX-SECURITY_POLE.x),h:27};
+  const c=patrolHelicopterModel();
   carLoft(c,[{pts:chamfer(-25,-11,53,22,9),z:2},{pts:chamfer(-21,-12,48,24,10),z:20},{pts:chamfer(-14,-8,30,16,7),z:28}],'#263f59','#132a42','#34516c');
   for(const side of [-1,1])if(facesViewer(-Math.sin(c.angle)*side,Math.cos(c.angle)*side,c.x,c.y))carPoly(c,[[0,side*12,9],[20,side*8,9],[18,side*9,21],[0,side*11,23]],'#315767');
   for(const side of [-1,1])if(facesViewer(-Math.sin(c.angle)*side,Math.cos(c.angle)*side,c.x,c.y)){carPoly(c,[[-22,side*11.8,5],[22,side*9.5,5],[22,side*9.5,9],[-22,side*11.8,9]],'#f4f2e5');vehicleSideText(c,'POLÍCIA',-8,side*12.2,12,4.6,'#f5f2e5')}
   carBox(c,-66,-3,47,6,9,7,'#1d3854','#13293e','#2a4660');carPoly(c,[[-66,0,11],[-73,0,34],[-61,0,31],[-53,0,12]],'#f0f0e4');
   carBox(c,-58,-3.1,7,6.2,9,7,'#f3f2e5','#d9e1db','#edf0e5');
-  for(const v of [-16,16]){line(carPoint(c,-17,v,-7),carPoint(c,22,v,-7),'#6b7f7d',2.2);for(const u of [-12,14])line(carPoint(c,u,v,-7),carPoint(c,u,v*.5,3),'#8d9f94',1.6)}
-  line(carPoint(c,0,0,24),carPoint(c,0,0,38),'#738b86',3);
-  const rotor=worldTime*43;for(let i=0;i<4;i++){const a=rotor+i*TAU/4;line(carPoint(c,Math.cos(a)*7,Math.sin(a)*7,38),carPoint(c,Math.cos(a)*79,Math.sin(a)*79,38),'#a2b0a3aa',3.5)}
-  const lens=carPoint(c,15,0,-1);sphere(...lens,4,'#243e4a',1);line(lens,[lens[0],lens[1],lens[2]-5],'#4a686d',2);
-  if(SUN.night){glowAt(...carPoint(c,0,-13,14),5,'#ff6654',.8);glowAt(...carPoint(c,0,13,14),5,'#7bdb8b',.8);if(Math.sin(worldTime*6)>0)glowAt(...carPoint(c,-58,0,18),5,'#fff2c7',.7)}
+  for(const v of [-16,16]){line(carPoint(c,-17,v,-7),carPoint(c,22,v,-7),'#6b7f7d',4.4);for(const u of [-12,14])line(carPoint(c,u,v,-7),carPoint(c,u,v*.5,3),'#8d9f94',3.2)}
+  line(carPoint(c,0,0,24),carPoint(c,0,0,38),'#738b86',6);
+  const rotor=worldTime*43;for(let i=0;i<4;i++){const a=rotor+i*TAU/4;line(carPoint(c,Math.cos(a)*7,Math.sin(a)*7,38),carPoint(c,Math.cos(a)*79,Math.sin(a)*79,38),'#a2b0a3aa',7)}
+  const lens=carPoint(c,15,0,-1);sphere(...lens,8,'#243e4a',1);line(lens,[lens[0],lens[1],lens[2]-10],'#4a686d',4);
+  if(SUN.night){glowAt(...carPoint(c,0,-13,14),10,'#ff6654',.8);glowAt(...carPoint(c,0,13,14),10,'#7bdb8b',.8);if(Math.sin(worldTime*6)>0)glowAt(...carPoint(c,-58,0,18),10,'#fff2c7',.7)}
 }
 const detailedMapObjects=collectSceneObjects;collectSceneObjects=function(scene){
   const objects=detailedMapObjects(scene);
   for(const [a,b]of tramCouplers(scene.cars)){const points=[carPoint(a,-a.l/2,-17,9),carPoint(a,-a.l/2,17,57),carPoint(b,b.l/2,-17,9),carPoint(b,b.l/2,17,57)],bounds=renderBounds(points),depth=sceneObjectBoundsDepth(bounds);if(!replayView||depth>35)objects.push({bounds,depth,draw:()=>drawTramCoupler(a,b)})}
-  if(activeMap===3&&!replayView){const bounds=solidRenderBounds(SECURITY_POLE.x-90,SECURITY_POLE.y-90,180,180,SECURITY_POLE.z-12,58);objects.push({bounds,depth:sceneObjectBoundsDepth(bounds),draw:drawPatrolHelicopter})}
+  if(activeMap===3&&!replayView){const bounds=patrolHelicopterBounds();objects.push({bounds,depth:sceneObjectBoundsDepth(bounds),draw:drawPatrolHelicopter})}
   return objects;
 };
 const beachPedestrian=pedestrian;pedestrian=function(p){if(p.bather)drawBeachVisitor(p);else beachPedestrian(p)};
@@ -3659,7 +3658,7 @@ const beachWalker=movePanickedPerson;movePanickedPerson=function(p,dt){if(p.bath
 const beachEscape=updatePedestrianEscapeProgress;updatePedestrianEscapeProgress=function(p,dt){if(!p.bather)beachEscape(p,dt)};
 const originalCoastInitializer=initializeMapRound;initializeMapRound=function(){originalCoastInitializer();tramSerial=0;configureMapCamera();if(activeMap===3)addBeachVisitors()};
 spawnTram=spawnArticulatedTram;derailTram=derailArticulatedTram;drawTram=drawRioTram;
-const otherVehicleLights=vehicleLightLayout;vehicleLightLayout=function(c){if(!c.tram)return otherVehicleLights(c);if(c.exploded)return{front:[],rear:[]};const lamps=[-10,10].map(v=>({model:c,u:(c.tramCabEnd||1)*55.4,v,z:18.5,width:2}));return{front:c.tramUnit===0?lamps:[],rear:c.tramUnit===1?lamps:[]}};
+const otherVehicleLights=vehicleLightLayout;vehicleLightLayout=function(c){if(!c.tram)return otherVehicleLights(c);if(c.exploded||c.tramCabEnd===0)return{front:[],rear:[]};const lamps=[-10,10].map(v=>({model:c,u:(c.tramCabEnd||1)*55.4,v,z:18.5,width:2}));return{front:c.tramUnit===0?lamps:[],rear:c.tramUnit===2?lamps:[]}};
 
 // The playfield is a world-space footprint, independent of the camera, zoom,
 // elevation and time of day. Tall objects retain their complete vertical shape.
@@ -4180,6 +4179,61 @@ function drawSkidMarks(list){
   ctx.globalAlpha=1;
   for(const m of list)if(!m.persistent)drawSkidMark(m);
 }
+
+const DEBRIS_SEA_LEVEL=-148;
+let debrisSplashTick=-1,debrisSplashCount=0;
+function isCoastalWater(x,y){return activeMap===3&&mapPointInside(x,y)&&y>=Math.max(170,coastRoadY(x)+298)}
+function emitDebrisSplash(body,radius){
+  const tick=Math.floor(worldTime*8);if(tick!==debrisSplashTick){debrisSplashTick=tick;debrisSplashCount=0}
+  if(debrisSplashCount++>=6||particles.length>1000)return;
+  for(let i=0;i<8;i++){
+    const a=i/8*TAU,speed=13+i%3*7;
+    particles.push({x:body.x+Math.cos(a)*radius*.35,y:body.y+Math.sin(a)*radius*.35,z:DEBRIS_SEA_LEVEL+.5,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,vz:22+i%4*7,life:.45+i%3*.10,max:.65,size:1+i%2,color:'#b9dedc',type:'seaSpray'});
+  }
+}
+function updateSeaDebris(body,dt,below,above){
+  if(body.seaSunk){body.vx=body.vy=body.vz=0;return true}
+  if(!body.seaSinking){
+    if(!isCoastalWater(body.x,body.y)||body.z-below>DEBRIS_SEA_LEVEL+3.2)return false;
+    body.seaSinking=true;body.seaSinkAge=0;body.sleeping=false;body.grounded=false;
+    delete body.replayStatic;body.vz=Math.min(-12,body.vz||0);emitDebrisSplash(body,Math.max(3,below,above));
+  }
+  body.seaSinkAge+=dt;
+  body.vx=(body.vx||0)*Math.exp(-3.5*dt);body.vy=(body.vy||0)*Math.exp(-3.5*dt);
+  body.x+=body.vx*dt;body.y+=body.vy*dt;
+  body.vz=Math.max(-38,body.vz-36*dt);body.z+=body.vz*dt;
+  if(body.r){body.spin+=(body.spinVelocity||0)*dt;body.spinVelocity=(body.spinVelocity||0)*Math.exp(-2*dt);body.lean+=(body.tipSign||1)*dt*.3}
+  if(body.z+above<DEBRIS_SEA_LEVEL-3){body.seaSunk=true;body.sleeping=true;body.vx=body.vy=body.vz=0}
+  return true;
+}
+function withSeaDebrisClip(body,draw){
+  if(body.seaSunk)return;
+  if(!body.seaSinking){draw();return}
+  const previous=seaModelClip,level=vehicleCoverLevel;seaModelClip=true;vehicleCoverLevel=DEBRIS_SEA_LEVEL;
+  try{draw()}finally{seaModelClip=previous;vehicleCoverLevel=level}
+}
+const dryRubbleDraw=drawRubble;drawRubble=function(r){withSeaDebrisClip(r,()=>dryRubbleDraw(r))};
+const dryWheelDraw=drawLooseWheel;drawLooseWheel=function(w){withSeaDebrisClip(w,()=>dryWheelDraw(w))};
+// The underlying tire integrator may sleep on dry ground. Keep submerged tires
+// out of its ground-clamping/collision paths so they cannot float or wake up.
+const beachWheelUpdate=updateLooseWheels;updateLooseWheels=function(dt){
+  if(activeMap!==3){beachWheelUpdate(dt);return}
+  const all=looseWheels,dry=[];
+  for(const w of all){const support=looseWheelSupport(w);if(!updateSeaDebris(w,dt,support,support))dry.push(w)}
+  looseWheels=dry;
+  try{beachWheelUpdate(dt)}finally{looseWheels=all}
+};
+const dryDebrisParticle=drawSceneParticle;drawSceneParticle=function(p){
+  if(p.type==='debris'&&isCoastalWater(p.x,p.y)){
+    const alpha=clamp((p.z+p.size-DEBRIS_SEA_LEVEL)/Math.max(1,p.size*2),0,1);if(alpha<=0)return;
+    const previous=ctx.globalAlpha;ctx.globalAlpha*=alpha;try{dryDebrisParticle(p)}finally{ctx.globalAlpha=previous}return;
+  }
+  dryDebrisParticle(p);
+};
+
+function patrolHelicopterModel(){return{x:clamp(SECURITY_POLE.x+Math.sin(worldTime*.7)*3,-650,650),y:clamp(SECURITY_POLE.y+Math.cos(worldTime*.6)*3,-290,350),z:SECURITY_POLE.z+Math.sin(worldTime*1.3)*2,angle:Math.atan2(coastRoadY(slideX)-SECURITY_POLE.y,slideX-SECURITY_POLE.x),h:54,helicopter:true}}
+function patrolHelicopterBounds(){const c=patrolHelicopterModel();return solidRenderBounds(c.x-164,c.y-164,328,328,c.z-18,102)}
+const unscaledHelicopterPoint=carPoint;carPoint=function(c,u,v,z=0){return c.helicopter?unscaledHelicopterPoint(c,u*2,v*2,z*2):unscaledHelicopterPoint(c,u,v,z)};
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',()=>{prev=performance.now()});newMatch();installViewportGuards();resize();updateSoundUI();requestAnimationFrame(frame);
