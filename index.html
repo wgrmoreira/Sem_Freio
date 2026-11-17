@@ -1770,7 +1770,7 @@ function resolvePhysicalPenetrations(){
 
 let parkedVehicleBounds=[],parkedVehicleSignature='',navigationVehicleId=0;
 function updateParkedVehicleNavigation(){
-  const parked=cars.filter(c=>Math.hypot(c.vx,c.vy)<12&&c.z<8&&(!c.rollover||c.rollLanded));
+  const parked=cars.filter(c=>!c.fullySubmerged&&Math.hypot(c.vx,c.vy)<12&&c.z<8&&(!c.rollover||c.rollLanded));
   for(const c of parked)c.navigationId??=++navigationVehicleId;
   const signature=parked.map(c=>[c.navigationId,Math.round(c.x/6),Math.round(c.y/6),Math.round(c.angle*12),Math.round(c.w/4)].join(':')).join('|');
   if(signature===parkedVehicleSignature)return;
@@ -1914,6 +1914,7 @@ function checkRoundInactivity(){
   if(score>roundObservedScore){roundObservedScore=score;lastRoundPointAt=elapsed}
   if(elapsed-lastRoundPointAt<6)return false;
   if(activeMap===2&&cars.some(c=>c.tram&&!c.derailed&&c.braking&&Math.abs(c.vx)>.4))return false;
+  if(activeMap===3&&cars.some(c=>c.beachOverflow&&!c.fullySubmerged))return false;
   finishLaunch(score===0);return true;
 }
 function makeSchoolBus(x,y,angle){
@@ -4550,6 +4551,84 @@ function sortBoxSemiFaces(faces){
   }
   return result;
 }
+
+// Reserve at most two overlapping vehicle layers while cars are still falling.
+// This also handles simultaneous falls, rather than waiting for all of them to
+// land before deciding whether a beach pile is already full.
+function beachVehicleLayer(c){
+  const body=beachFootprint(c,c.beachTargetX);let highest=-1;
+  for(const other of cars){
+    if(other===c||other.rock||other.beachOverflow||other.fullySubmerged||!other.offCliff&&!other.beached||!Number.isFinite(other.beachTargetX))continue;
+    const contact=collision(body,beachFootprint(other,other.beachTargetX));if(!contact||contact.depth<2)continue;
+    highest=Math.max(highest,other.beachReservedLevel??other.beachPileLevel??0);
+  }
+  return highest+1;
+}
+const beforeCappedBeachFall=beginBeachFall;
+beginBeachFall=function(c){
+  const entering=!c.offCliff&&!c.sunk;beforeCappedBeachFall(c);
+  if(!entering||!c.offCliff||c.rock)return;
+  c.beachReservedLevel=beachVehicleLayer(c);
+  if(c.beachReservedLevel<2)return;
+  c.beachOverflow=true;c.beachTargetOffset=310;
+  c.beachTargetRoll+=c.cliffRollSign*TAU;
+};
+beachPileSupport=function(c){
+  const body=beachFootprint(c,c.beachTargetX);let height=-Infinity,level=0;
+  for(const other of cars){
+    if(other===c||!other.beached||other.beachOverflow||other.fullySubmerged)continue;
+    const contact=collision(body,beachFootprint(other,other.x));if(!contact||contact.depth<2)continue;
+    const bounds=stableBeachSupportBounds(other);
+    if(bounds.maxZ+1>height){height=bounds.maxZ+1;level=other.rock?0:(other.beachPileLevel??other.beachReservedLevel??0)+1}
+  }
+  return{height,level};
+};
+const beforeCappedBeachSurface=beachLandingSurface;
+beachLandingSurface=function(c){return c.beachOverflow?DEBRIS_SEA_LEVEL+1:beforeCappedBeachSurface(c)};
+function beginOverflowSubmersion(c){
+  c.x=c.beachTargetX;c.y=coastRoadY(c.x)+c.beachTargetOffset;
+  c.angle=c.beachTargetAngle;c.roll=c.beachTargetRoll;c.rollTarget=c.roll;c.rollLanded=true;c.rollLift=0;c.w=c.rollBaseW;
+  const bounds=vehicleRenderBounds(c);
+  c.z+=DEBRIS_SEA_LEVEL-bounds.minZ-3;
+  c.seaEntryZ=c.z;c.seaEntryY=c.y;c.seaEntryAngle=c.angle;c.seaEntryRoll=c.roll;
+  c.seaSinkDistance=vehicleRenderBounds(c).maxZ-DEBRIS_SEA_LEVEL+8;
+  c.seaSinkAge=0;c.seaSinkDuration=4.2+Math.min(1.2,c.mass*.055);
+  c.vehicleSubmerging=true;c.sunk=true;c.beached=false;c.burning=false;c.sootEmitter=false;c.fuelArmed=false;
+  c.restSurfaceZ=DEBRIS_SEA_LEVEL;c.restingSeaZ=c.z;c.vx=c.omega=0;c.vy=1;c.vz=-1;
+  emitDebrisSplash(c,Math.min(45,c.rollBaseW));
+}
+const beforeCappedBeachLanding=settleBeachWreck;
+settleBeachWreck=function(c){if(c.beachOverflow)beginOverflowSubmersion(c);else beforeCappedBeachLanding(c)};
+const beforeOverflowMotion=updateCoastalFalls;
+updateCoastalFalls=function(dt){
+  beforeOverflowMotion(dt);
+  if(activeMap!==3)return;
+  for(const c of cars){
+    if(!c.vehicleSubmerging||c.fullySubmerged)continue;
+    const previousZ=c.z;
+    c.seaSinkAge+=dt;const t=clamp(c.seaSinkAge/c.seaSinkDuration,0,1),sink=t*t*(3-2*t);
+    c.z=c.seaEntryZ-c.seaSinkDistance*sink;c.restingSeaZ=c.z;
+    c.y=c.seaEntryY+6*t;c.angle=c.seaEntryAngle+.035*Math.sin(t*Math.PI);
+    c.roll=c.seaEntryRoll+c.cliffRollSign*.10*Math.sin(t*Math.PI);c.rollLift=0;
+    c.vx=c.omega=0;c.vy=6/c.seaSinkDuration;c.vz=-Math.max(1,(previousZ-c.z)/dt);
+    if(t>=1){c.fullySubmerged=true;c.vehicleSubmerging=false;c.vx=c.vy=c.vz=c.omega=0}
+  }
+};
+const beforeOverflowSeaDraw=drawSeaVehicle;
+drawSeaVehicle=function(c){
+  if(c.fullySubmerged)return;
+  if(!c.beachOverflow)return beforeOverflowSeaDraw(c);
+  const clip=seaModelClip,level=vehicleCoverLevel;seaModelClip=true;vehicleCoverLevel=DEBRIS_SEA_LEVEL;
+  try{drawFallenVehicleModel(c)}finally{seaModelClip=clip;vehicleCoverLevel=level}
+  const radius=Math.max(c.l,c.rollBaseW)*.47,alpha=Math.max(0,1-c.seaSinkAge/c.seaSinkDuration);
+  for(let i=0;i<6;i++){
+    const a=i/6*TAU,b=a+.32;
+    const p=[c.x+Math.cos(a)*radius,c.y+Math.sin(a)*radius*.42,DEBRIS_SEA_LEVEL+.5],q=[c.x+Math.cos(b)*radius,c.y+Math.sin(b)*radius*.42,DEBRIS_SEA_LEVEL+.5];
+    if(isCoastalWater(p[0],p[1])&&isCoastalWater(q[0],q[1]))line(p,q,'rgba(199,232,221,'+(alpha*.45)+')',1.1);
+  }
+};
+const beforeOverflowVisibility=mapVehicleVisible;
+mapVehicleVisible=function(c){return !c.fullySubmerged&&beforeOverflowVisibility(c)};
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',()=>{prev=performance.now()});newMatch();installViewportGuards();resize();updateSoundUI();requestAnimationFrame(frame);
