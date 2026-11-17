@@ -688,10 +688,12 @@ function destroyScenery(s,c,force){
   s.destroyed=true;sceneryCache.delete(s);navRevision++;if(s.category==='hydrant')addWaterSource(s.x,s.y,1,s.x+s.y);if(s.category==='crane')toppleCrane(s,c);
   const b=sceneBounds.get(s),wood=s.material==='wood',tree=s.material==='tree',metal=s.material==='metal';
   const colors=tree?['#7c9e45','#9ab94e','#79644c']:metal?['#798b8d','#b7c1bb','#566970']:wood?['#c1a16d','#91784f','#d2b782']:['#c7bda4','#928f80','#aaa68f'];
-  const count=s.isBuilding||s.category==='gasStation'?Math.round((s.h>150?756:288)*.64):s.category==='footbridge'?24:tree?20:metal?12:16;
+  const map2Building=activeMap===2&&s.isBuilding;
+  const baseCount=s.isBuilding||s.category==='gasStation'?Math.round((s.h>150?756:288)*.64):s.category==='footbridge'?24:tree?20:metal?12:16;
+  const count=map2Building?Math.round(baseCount*.70):baseCount;
   for(let i=0;i<count;i++){
     const a=rand(0,TAU),speed=rand(15,80)+force*.12;
-    rubble.push({x:rand(b.x,b.x+b.w),y:rand(b.y,b.y+b.d),z:rand(4,Math.min(s.h,130)),vx:Math.cos(a)*speed+c.vx*.15,vy:Math.sin(a)*speed+c.vy*.15,vz:rand(20,100),size:rand(3,s.h>150?17:9)*(s.isBuilding||s.category==='gasStation'?1.05:1),angle:rand(0,TAU),color:colors[i%3]});
+    rubble.push({x:rand(b.x,b.x+b.w),y:rand(b.y,b.y+b.d),z:rand(4,Math.min(s.h,130)),vx:Math.cos(a)*speed+c.vx*.15,vy:Math.sin(a)*speed+c.vy*.15,vz:rand(20,100),size:rand(3,s.h>150?17:9)*(s.isBuilding||s.category==='gasStation'?1.05:1)*(map2Building?1.10:1),angle:rand(0,TAU),color:colors[i%3]});
   }
   if(s.isBuilding)emitBuildingDust(s,b,force);
   if(s.category==='gasStation'){emitBuildingDust(s,b,force);startStationDemolitionSmoke(s)}
