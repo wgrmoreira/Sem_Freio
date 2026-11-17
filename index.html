@@ -690,7 +690,7 @@ function destroyScenery(s,c,force){
   const colors=tree?['#7c9e45','#9ab94e','#79644c']:metal?['#798b8d','#b7c1bb','#566970']:wood?['#c1a16d','#91784f','#d2b782']:['#c7bda4','#928f80','#aaa68f'];
   const map2Building=activeMap===2&&s.isBuilding;
   const baseCount=s.isBuilding||s.category==='gasStation'?Math.round((s.h>150?756:288)*.64):s.category==='footbridge'?24:tree?20:metal?12:16;
-  const count=map2Building?Math.round(baseCount*.70):baseCount;
+  const count=map2Building?Math.round(Math.round(baseCount*.70)*.50):baseCount;
   for(let i=0;i<count;i++){
     const a=rand(0,TAU),speed=rand(15,80)+force*.12;
     rubble.push({x:rand(b.x,b.x+b.w),y:rand(b.y,b.y+b.d),z:rand(4,Math.min(s.h,130)),vx:Math.cos(a)*speed+c.vx*.15,vy:Math.sin(a)*speed+c.vy*.15,vz:rand(20,100),size:rand(3,s.h>150?17:9)*(s.isBuilding||s.category==='gasStation'?1.05:1)*(map2Building?1.10:1),angle:rand(0,TAU),color:colors[i%3]});
@@ -2781,7 +2781,8 @@ function drawCinematicAtmosphere(){
 }
 
 function emitBuildingDust(s,b,force){
-  const count=s.h>150?144:100;
+  const baseCount=s.h>150?144:100;
+  const count=activeMap===2&&s.isBuilding?Math.round(baseCount*1.05):baseCount;
   for(let i=0;i<count;i++){
     const x=b.x+seeded(i,s.x)*b.w,y=b.y+seeded(i,s.y+17)*b.d,angle=seeded(i,s.x+s.y+33)*TAU,speed=14+seeded(i,force+27)*40,life=2.2+seeded(i,s.h+51)*2.2;
     particles.push({x,y,z:3+seeded(i,s.y+29)*Math.min(s.h*.48,85),vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,vz:14+seeded(i,s.x+71)*27,life,max:life,size:17+seeded(i,s.y+75)*22,color:i%3?'#eeeae1':'#faf7ef',type:'smoke',dust:true});
@@ -3212,6 +3213,12 @@ function drawFootbridge(s){
     for(const v of [0,36])line([x+4,y+v,z],[x+4,y+v,z+22],'#d5d2b6',1.3);
   }
 }
+function inRockslideTreePath(x,size=1){return x>=slideX-100-7*size&&x<=slideX+120+7*size}
+function addCoastalTree(x,y,size,rockslidePathTree=false){
+  const z=coastHeight(x,y),s={x,y,w:44*size,d:44*size,h:groundedTreeHeight(x,y,size),elevation:z,treeSize:size,material:'tree',category:'tree',rockslidePathTree};
+  s.colliders=[{x:x-7*size,y:y-7*size,w:14*size,d:14*size,zMin:z,zMax:z+s.h}];
+  addMapScenery(s,s.colliders[0],a=>withMapElevation(a.elevation,()=>tree(a.x,a.y,a.treeSize)));
+}
 function buildCoastalDistrict(){
   removeMapScenery(s=>s.category!=='securityCamera');
   removeMapScenery(s=>s.category==='securityCamera');
@@ -3220,10 +3227,13 @@ function buildCoastalDistrict(){
   for(let row=0;row<5;row++)for(let col=0;col<17;col++){
     const x=-778+col*97+rand(-17,17),y=coastRoadY(x)-206-row*58+rand(-10,10);
     if(y<-458||Math.abs(x-slideX)<80&&row>=2)continue;
-    const size=rand(.73,1.06),z=coastHeight(x,y),s={x,y,w:44*size,d:44*size,h:groundedTreeHeight(x,y,size),elevation:z,treeSize:size,material:'tree',category:'tree'};
-    s.colliders=[{x:x-7*size,y:y-7*size,w:14*size,d:14*size,zMin:z,zMax:z+s.h}];
-    addMapScenery(s,s.colliders[0],a=>withMapElevation(a.elevation,()=>tree(a.x,a.y,a.treeSize)));
+    const size=rand(.73,1.06);
+    if(inRockslideTreePath(x,size))continue;
+    addCoastalTree(x,y,size);
   }
+  // Keep one destructible tree along the four rocks' downhill corridor.
+  const pathX=slideX-42;
+  addCoastalTree(pathX,coastRoadY(pathX)-250,rand(.80,.95),true);
   for(let x=-810;x<815;x+=55){const y=coastRoadY(x)+153;
     const s={x,y,w:49,d:10,h:15,material:'wall',category:'coastWall'};
     addMapScenery(s,rect(x,y,49,10),a=>box(a.x,a.y,a.w,a.d,a.h,'#c1b69a','#847f70','#9a947e'));
