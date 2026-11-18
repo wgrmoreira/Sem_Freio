@@ -105,7 +105,7 @@ body.immersive .arena{width:100%;height:100%;min-width:0;min-height:0}
 <main>
 <div class="arena" id="arena"><canvas id="game" aria-label="Jogo de colisões de carros em vista isométrica. Toque na tela, use o botão Lançar carro ou a tecla espaço."></canvas><div class="map-tag"><b>AO VIVO</b> SETOR 07 <span style="color:#657c82">/</span> VISTA ISOMÉTRICA</div><div class="scene-info"><strong>AV. DO IMPACTO</strong><br>4 FAIXAS · MÃO DUPLA</div><div class="end-actions" id="endActions" hidden><button id="cameraReplay" aria-label="Assistir ao replay pela câmera de segurança"><span aria-hidden="true">📷</span> REPLAY</button><button id="continueCrash">CONTINUAR →</button></div><div class="event-points" id="eventPoints" aria-label="Pontos por ocorrência"><div><span>Batidas</span><b id="pointsCollision">0 pts</b></div><div><span>Atropelamentos</span><b id="pointsPedestrian">0 pts</b></div><div><span>Capotamentos</span><b id="pointsRollover">0 pts</b></div><div><span>Destruição de cenário</span><b id="pointsScenery">0 pts</b></div><div><span>Pilotos lançados</span><b id="pointsRider">0 pts</b></div></div><div class="float-combo" id="comboPop"><strong>REAÇÃO EM CADEIA</strong><span>O CAOS SÓ ESTÁ COMEÇANDO</span></div><div class="reticle"><span>↗</span>SEU CARRO <b style="color:#ff815d;font-weight:500">/ CORAL GT</b></div><div class="status" id="status">● TOQUE NA TELA PARA LANÇAR</div><div class="north">N<b>↑</b></div>
 <div class="modal-backdrop" id="result" role="dialog" aria-modal="true" aria-labelledby="resultTitle"><div class="modal news-modal"><div class="news-top"><b>IMPACTO <i>NEWS</i></b><span>EDIÇÃO ESPECIAL · SIMULAÇÃO ARCADE</span></div><div class="news-studio"><div class="news-anchor"><svg viewBox="0 0 250 210" role="img" aria-label="Willian Bouner na bancada do telejornal"><defs><linearGradient id="studio" x2="1" y2="1"><stop stop-color="#233966"/><stop offset="1" stop-color="#101e38"/></linearGradient></defs><path fill="url(#studio)" d="M0 0h250v210H0z"/><path stroke="#44659a" fill="none" d="M0 30h250M0 70h250M0 110h250M30 0v160M90 0v160M150 0v160M210 0v160"/><path fill="#18263c" d="M61 165l10-54 32-15h45l32 15 12 54z"/><path fill="#eef1f4" d="M107 97h38l-20 58z"/><path fill="#db9b76" d="M111 80h28v29l-14 10-14-10z"/><path fill="#e8ae88" d="M96 38l12-14h35l13 17-5 38-16 19h-18L99 78z"/><path fill="#30323e" d="M95 48l-2-19 17-14h34l16 17-5 27-8-23-34 2-12 19z"/><path fill="#f1eee6" d="M104 23q7-8 19-8l-7 10-4 13-10 3 4-13z"/><path stroke="#553d39" stroke-width="2" d="M106 59h10m18 0h10m-27 20q8 4 16 0"/><path fill="#db454c" d="M120 115h10l4 23-9 16-8-16z"/><path fill="#2d466d" d="M0 155l125-9 125 9v55H0z"/><path fill="#54749d" d="M0 155l125-9 125 9-18 13H18z"/><path fill="#d9e4ed" d="M79 148h63l-7 8H71z"/><text x="125" y="191" text-anchor="middle" fill="#fff" font-size="15" font-family="Arial" font-weight="bold">IMPACTO NEWS</text></svg><span>WILLIAN BOUNER · NO ESTÚDIO</span></div><div class="news-monitor"><img id="newsImage" alt="Imagem do acidente ocorrido nesta partida"><canvas id="newsReplayCanvas" hidden role="img" aria-label="Replay do acidente selecionado"></canvas><span id="newsMonitorLabel">IMAGENS DO LOCAL · REPLAY</span></div></div><div class="news-replay-desk"><div class="news-replay-heading"><b>ARQUIVO DA REPORTAGEM</b>REVEJA OS 3 ACIDENTES</div><div class="news-replay-options" role="group" aria-label="Selecionar replay do acidente"><button class="news-replay-option" id="newsReplay1" type="button" aria-pressed="false" aria-label="Rever acidente 1" disabled><img id="newsReplayThumb1" alt=""><strong>▶ 1</strong><small id="newsReplayTime1">—</small></button><button class="news-replay-option" id="newsReplay2" type="button" aria-pressed="false" aria-label="Rever acidente 2" disabled><img id="newsReplayThumb2" alt=""><strong>▶ 2</strong><small id="newsReplayTime2">—</small></button><button class="news-replay-option" id="newsReplay3" type="button" aria-pressed="false" aria-label="Rever acidente 3" disabled><img id="newsReplayThumb3" alt=""><strong>▶ 3</strong><small id="newsReplayTime3">—</small></button></div></div><div class="news-lower"><b>URGENTE</b><span id="newsHeadline">COLISÕES EM SEQUÊNCIA NA AVENIDA DO IMPACTO</span></div><div class="news-content"><div class="eyebrow" id="resultBadge">SIMULAÇÃO CONCLUÍDA</div><h2 id="resultTitle">BALANÇO DOS ACIDENTES DE HOJE</h2><div class="result-score" id="resultScore">0</div><p class="news-score-label">PONTUAÇÃO TOTAL · 3 LANÇAMENTOS</p><button class="launch" id="again"><b>NOVA PARTIDA · 3 LANÇAMENTOS</b><span>↻</span></button></div><div class="news-ticker" id="newsTicker" aria-label="Maior pontuação"><div class="news-ticker-track"><span id="newsTickerText"></span><span id="newsTickerRepeat" aria-hidden="true"></span></div></div></div></div>
-<div class="modal-backdrop" id="instructions" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal"><button class="close" id="closeHelp" aria-label="Fechar instruções">×</button><div class="eyebrow">MANUAL DO CAOS</div><h2 id="helpTitle">O TEMPO É TUDO.</h2><ol class="help-list"><li>Observe o trânsito: o fluxo aumenta e diminui naturalmente.</li><li>Toque em qualquer área livre da tela ou aperte <b>Espaço</b> para lançar. Na Costa da Serra, o lançamento solta quatro pedras da encosta.</li><li>O impacto empurra os carros e pode iniciar novas batidas. Cada veículo atingido e cada dano aumentam o placar.</li><li>Batidas próximas no tempo aumentam o multiplicador. Os motoristas tentam desviar e freiam quando o caminho está bloqueado.</li><li>Cada partida visita <b>3 cenários em ordem aleatória</b>: Centro, Estação VLT e Costa da Serra. Um lançamento às 9h, outro às 16h e o último às 20h. Passou sem bater? O próximo é preparado automaticamente. A pontuação final é a soma dos três lançamentos; o maior total fica salvo.</li></ol><p>Espaço: lançar / nova partida · R: reiniciar a partida · M: som<br>Seu recorde fica salvo neste navegador.</p><button class="launch" id="understood"><b>VAMOS AO CAOS</b><span>↗</span></button></div></div>
+<div class="modal-backdrop" id="instructions" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><div class="modal"><button class="close" id="closeHelp" aria-label="Fechar instruções">×</button><div class="eyebrow">MANUAL DO CAOS</div><h2 id="helpTitle">O TEMPO É TUDO.</h2><ol class="help-list"><li>Observe o trânsito: o fluxo aumenta e diminui naturalmente.</li><li>Toque em qualquer área livre da tela ou aperte <b>Espaço</b> para lançar. Na Costa da Serra, o lançamento solta cinco pedras: a última desce 3 segundos depois.</li><li>O impacto empurra os carros e pode iniciar novas batidas. Cada veículo atingido e cada dano aumentam o placar.</li><li>Batidas próximas no tempo aumentam o multiplicador. Os motoristas tentam desviar e freiam quando o caminho está bloqueado.</li><li>Cada partida visita <b>3 cenários em ordem aleatória</b>: Centro, Estação VLT e Costa da Serra. Um lançamento às 9h, outro às 16h e o último às 20h. Passou sem bater? O próximo é preparado automaticamente. A pontuação final é a soma dos três lançamentos; o maior total fica salvo.</li></ol><p>Espaço: lançar / nova partida · R: reiniciar a partida · M: som<br>Seu recorde fica salvo neste navegador.</p><button class="launch" id="understood"><b>VAMOS AO CAOS</b><span>↗</span></button></div></div>
 </div>
 <div class="controls"><div class="control-block power"><label class="control-label" for="power">VELOCIDADE DE LANÇAMENTO <b id="speedValue">200 km/h</b></label><input id="power" type="range" min="120" max="280" value="200" step="10"><div class="range-labels"><span>120 KM/H</span><span>280 KM/H</span></div></div><div class="launch-area"><div class="launch-hint">Toque na tela para lançar.<br><kbd>ESPAÇO</kbd> para lançar</div><button class="launch" id="launch"><b>LANÇAR CARRO</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20 20 4M5 4h15v15"/></svg></button></div></div>
 </main><footer class="foot"><div class="steps"><span><em>01</em> Observe o fluxo</span><span><em>02</em> Escolha o momento</span><span><em>03</em> <span class="accent">Provoque a reação em cadeia</span></span></div><span>SEM FREIO. SEM SEGURO. SÓ FÍSICA.<br><span style="color:#596875">Uma experiência arcade · feita para se divertir</span></span></footer>
@@ -468,7 +468,7 @@ if(firstCrashAt===null&&spawnTimer<=0){
 }else if(state==='running'&&firstCrashAt!==null)spawnPostCrashArrival();
 driveSafeTraffic(dt);updateMapBeforeMotion(dt);
 
-for(const c of cars){if(c.offCliff||c.sunk)continue;updateRecklessCar(c,dt);brakeAccidentVehicle(c,dt);applyAftermathTrafficBrake(c,dt);c.x+=c.vx*dt;c.y+=c.vy*dt;if(c.affected&&!c.rock){const drag=Math.exp(-((isHeavyRoadVehicle(c))?(c.damage>0?(c.kind==='carrier'?.18:.24):(c.kind==='carrier'?.06:.08)):c.damage>0?1.05:.10)*dt/stoppingTimeFactor(c));c.vx*=drag;c.vy*=drag;if(Math.hypot(c.vx,c.vy)>8||c.z>1)c.angle+=c.omega*dt*((isHeavyRoadVehicle(c))?.25:1);else c.omega=0;c.omega*=Math.exp(-2*dt);if(c.damage>0&&Math.hypot(c.vx,c.vy)<1){c.vx=0;c.vy=0;c.omega=0}}
+for(const c of cars){if(c.railLocked||c.offCliff||c.sunk)continue;updateRecklessCar(c,dt);brakeAccidentVehicle(c,dt);applyAftermathTrafficBrake(c,dt);c.x+=c.vx*dt;c.y+=c.vy*dt;if(c.affected&&!c.rock){const drag=Math.exp(-((isHeavyRoadVehicle(c))?(c.damage>0?(c.kind==='carrier'?.18:.24):(c.kind==='carrier'?.06:.08)):c.damage>0?1.05:.10)*dt/stoppingTimeFactor(c));c.vx*=drag;c.vy*=drag;if(Math.hypot(c.vx,c.vy)>8||c.z>1)c.angle+=c.omega*dt*((isHeavyRoadVehicle(c))?.25:1);else c.omega=0;c.omega*=Math.exp(-2*dt);if(c.damage>0&&Math.hypot(c.vx,c.vy)<1){c.vx=0;c.vy=0;c.omega=0}}
  c.vz-=240*dt;c.z=Math.max(0,c.z+c.vz*dt);if(c.z===0)c.vz=0;c.flash=Math.max(0,c.flash-dt);
  if(!c.sunk&&!c.rock&&c.damage>22&&Math.random()<dt*SMOKE_RATE)particles.push({x:c.x,y:c.y,z:(c.offCliff?c.fallDepth:c.z)+27,vx:rand(-8,12),vy:rand(-10,8),vz:rand(14,27),life:rand(1,2.2),max:2.2,size:rand(7,14),color:c.damage>65?'#687267':'#afb8a3',type:'smoke'});
  updateBrakeMarks(c,dt);
@@ -1778,7 +1778,7 @@ function resolvePhysicalPenetrations(){
       separateVehiclePair(cars[i],cars[j],contact);moved=true;
     }
     for(const c of cars)for(const s of scenery){
-      if(s.destroyed)continue;
+      if(c.railLocked||s.destroyed)continue;
       const contact=sceneryVehicleContact(s,c);if(!contact||contact.depth<.01)continue;
       c.x-=contact.nx*(contact.depth+.025);c.y-=contact.ny*(contact.depth+.025);moved=true;
     }
@@ -3198,6 +3198,11 @@ let activeMap=1,mapOrder=[1,2,3],bridgeX=430,nextTramAt=4,tramsSpawned=0,slideX=
 const mapNames=['','CENTRO','ESTAÇÃO VLT','COSTA DA SERRA'];
 function coastRoadY(x){return 112*Math.sin((x+100)/300)+23*Math.sin(x/140)}
 function coastRoadSlope(x){return 112/300*Math.cos((x+100)/300)+23/140*Math.cos(x/140)}
+function coastalOutwardRollSign(c){
+  const slope=coastRoadSlope(c.x),across=Math.sin(c.angle)*slope+Math.cos(c.angle);
+  const target=c.beachTargetAngle??c.angle,fallback=Math.sin(target)*slope+Math.cos(target);
+  return (Math.abs(across)>.05?across:fallback)>=0?-1:1;
+}
 function coastHeight(x,y){return Math.max(0,(coastRoadY(x)-166-y)*.98)}
 function coastReceiverHeight(x,y){const edge=coastRoadY(x);return y<edge-166?coastHeight(x,y):y<edge+165?0:y<edge+218?-(y-edge-165)/53*125:y<edge+235?-125-(y-edge-218)/17*13:y<edge+278?-138:y<edge+298?-138-(y-edge-278)/20*7:-145}
 function mapParticleFloor(p){return p.type==='seaSpray'?-147:activeMap===3?coastReceiverHeight(p.x,p.y)+1:1}
@@ -3293,10 +3298,10 @@ function initializeMapRound(){
     $('announce').textContent='Costa da Serra. Toque para provocar o deslizamento.';
   }
   $('status').textContent='● '+mapNames[activeMap]+' · '+SUN.key+' · '+(activeMap===3?'ESCOLHA O MOMENTO DO DESLIZAMENTO':'ESCOLHA O MOMENTO');
-  canvas.setAttribute('aria-label','Impacto: '+mapNames[activeMap]+'. '+(activeMap===3?'Toque para soltar cinco pedras da encosta, com uma delas atrasada.':'Toque para lançar o carro.'));
+  canvas.setAttribute('aria-label','Impacto: '+mapNames[activeMap]+'. '+(activeMap===3?'Toque para soltar cinco pedras da encosta, com a última após três segundos.':'Toque para lançar o carro.'));
 }
 function launchRockslide(){
-  for(const c of cars)if(c.rock){if(c.delayedRock){c.slideReleaseAt=elapsed+2;c.pendingSlideSpeed=Number($('power').value)*.63*1.15*1.12;c.waiting=true;c.affected=false;c.vx=c.vy=c.vz=0}else releaseSlideRock(c)}
+  for(const c of cars)if(c.rock){if(c.delayedRock){c.slideReleaseAt=elapsed+3;c.pendingSlideSpeed=Number($('power').value)*.63*1.15*1.12;c.waiting=true;c.affected=false;c.vx=c.vy=c.vz=0}else releaseSlideRock(c)}
   crashFocus={x:slideX,y:coastRoadY(slideX)};
   $('status').textContent='↘ DESLIZAMENTO NA ENCOSTA';$('announce').textContent='Deslizamento iniciado!';
   tone(48,.65,'sawtooth',.035,90);
@@ -3327,17 +3332,8 @@ function driveCoastalTraffic(dt){
     if(speed<.6){c.vx=0;c.vy=0}
   }
 }
-function spawnTram(){
-  const dir=Math.random()<.5?1:-1,c={...makeCar(dir>0?-1010:1010,-238,dir>0?0:Math.PI,'#44a7ae','bus'),kind:'tram',l:238,w:35,h:61,mass:15,cruise:142,dir,vx:dir*142,vy:0,tram:true,affected:false};
-  if(cars.some(b=>!b.sunk&&Math.abs(b.x-c.x)<220&&Math.abs(b.y-c.y)<55))return false;
-  cars.push(c);tramsSpawned++;nextTramAt=worldTime+rand(11,18);return true;
-}
-function derailTram(c,nx,ny,force){
-  if(!c.tram||c.derailed||force<65||state!=='running')return;
-  c.derailed=true;c.affected=true;c.vy+=ny*clamp(force*.25,32,95);c.omega+=ny*.35;c.cruise=0;
-  c.vz=Math.max(c.vz,24);c.rollover=force>160;c.roll=0;c.rollSign=ny>0?-1:1;c.rollTarget=c.rollSign*Math.PI*.46;c.rollSpeed=2.2;
-  const points=Math.round(1400*combo);score+=points;pointLabel(c.x,c.y,points,'CAPOTAMENTO');updateHUD();
-}
+function spawnTram(){return createRigidTram()}
+function derailTram(){/* The complete VLT remains rail guided. */}
 function updateMapBeforeMotion(dt){
   releaseDelayedSlideRock();
   if(activeMap===2){
@@ -3496,57 +3492,15 @@ function configureMapCamera(){
 }
 function replayFocalLength(){return activeMap===3?Math.min(W*.63,H):Math.min(W*.90,H*1.65)}
 function makeTramWagon(x,dir,trainId,unit){
-  return{...makeCar(x,-238,dir>0?0:Math.PI,'#e0e3dc','bus'),kind:'tram',l:112,w:35,h:66,mass:7.5,cruise:355,dir,vx:dir*355,vy:0,tram:true,trainId,tramUnit:unit,tramCabEnd:unit===0?1:unit===2?-1:0,affected:false};
+  return{...makeCar(x,-238,dir>0?0:Math.PI,'#e0e3dc','bus'),kind:'tram',l:112,w:35,h:66,mass:20,cruise:355,dir,vx:dir*355,vy:0,tram:true,railLocked:true,trainId,tramUnit:unit,tramCabEnd:unit===0?1:unit===3?-1:0,affected:false};
 }
-function spawnArticulatedTram(){
-  const dir=tramTrafficDirection(),id=++tramSerial,wagons=Array.from({length:3},(_,unit)=>makeTramWagon(-dir*(980+unit*122),dir,id,unit));
-  if(wagons.some(w=>cars.some(c=>!c.sunk&&Math.abs(c.x-w.x)<(c.l+w.l)/2+18&&Math.abs(c.y-w.y)<(c.w+w.w)/2+8)))return false;
-  cars.push(...wagons);tramsSpawned++;nextTramAt=worldTime+rand(5.5,9);return true;
-}
+function spawnArticulatedTram(){return createRigidTram()}
 function tramCouplers(sceneCars=cars){
   const pairs=[];for(const lead of sceneCars)if(lead.tram&&!lead.couplerBroken){const rear=sceneCars.find(c=>c.tram&&c.trainId===lead.trainId&&c.tramUnit===lead.tramUnit+1&&!c.couplerBroken);if(rear)pairs.push([lead,rear])}return pairs.sort((a,b)=>a[0].trainId-b[0].trainId||a[0].tramUnit-b[0].tramUnit);
 }
-function solveTramCouplers(dt,velocity=true){
-  for(const [a,b]of tramCouplers()){
-    if(!a.derailed&&!b.derailed)continue;
-    const p=carPoint(a,-a.l/2,0,20),q=carPoint(b,b.l/2,0,20),dx=q[0]-p[0],dy=q[1]-p[1],distance=Math.hypot(dx,dy);
-    if(distance<.001)continue;
-    const nx=dx/distance,ny=dy/distance,error=distance-10,wa=1/a.mass,wb=1/b.mass,total=wa+wb;
-    // A pin joint transmits tension but leaves the two chassis free to yaw and
-    // roll independently. Gentle slack keeps all three carriages articulated.
-    const correction=clamp(error*.72,-9,22);a.x+=nx*correction*wa/total;a.y+=ny*correction*wa/total;b.x-=nx*correction*wb/total;b.y-=ny*correction*wb/total;
-    if(velocity){
-      const separating=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny,impulse=clamp((separating*.45+error*2.5)/total,-250,250);
-      a.vx+=nx*impulse*wa;a.vy+=ny*impulse*wa;b.vx-=nx*impulse*wb;b.vy-=ny*impulse*wb;
-      const crossA=Math.cos(a.angle)*ny-Math.sin(a.angle)*nx,crossB=Math.cos(b.angle)*ny-Math.sin(b.angle)*nx;
-      a.omega-=crossA*error*dt*.035;b.omega-=crossB*error*dt*.035;
-      const yaw=Math.atan2(Math.sin(b.angle-a.angle),Math.cos(b.angle-a.angle)),limit=1.15;
-      if(Math.abs(yaw)>limit){const excess=(Math.abs(yaw)-limit)*Math.sign(yaw);a.angle+=excess*.08;b.angle-=excess*.08}
-    }
-  }
-}
-function derailArticulatedTram(c,nx,ny,force){
-  if(!c.tram||force<65||state!=='running')return;
-  const newDerailment=!c.derailed;
-  c.derailed=true;c.affected=true;c.cruise=0;
-  if(newDerailment){
-    c.vy+=ny*clamp(force*.23,22,88);c.vx+=nx*Math.min(30,force*.07);c.omega+=(-Math.sin(c.angle)*nx+Math.cos(c.angle)*ny)*.65;
-    c.vz=Math.max(c.vz,Math.min(25,force*.08));
-    if(force>180){c.rollover=true;c.roll=0;c.rollBaseW=35;c.rollSign=ny*Math.cos(c.angle)-nx*Math.sin(c.angle)>0?-1:1;c.rollTarget=c.rollSign*Math.PI*.47;c.rollSpeed=1.9;c.rollLanded=false}
-    const points=Math.round(700*combo);score+=points;pointLabel(c.x,c.y,points,'CAPOTAMENTO');updateHUD();
-  }
-  for(const mate of cars)if(mate.tram&&mate.trainId===c.trainId&&mate!==c&&!mate.derailed){mate.derailed=true;mate.affected=true;mate.cruise=0;mate.omega-=c.omega*.16/(Math.abs(mate.tramUnit-c.tramUnit)||1);const points=Math.round(700*combo);score+=points;pointLabel(mate.x,mate.y,points,'CAPOTAMENTO');updateHUD()}
-}
-function updateTramMotion(dt){
-  if(worldTime>=nextTramAt&&canTramEnter()&&(firstCrashAt===null||elapsed-firstCrashAt<2))spawnArticulatedTram();
-  for(const c of cars)if(c.tram){
-    if(c.derailed)continue;
-    let speed=Math.abs(c.vx);
-    if(state==='running'&&elapsed>.55&&accidentBrakeReady(c,true)){c.braking=true;speed=Math.max(0,speed-42/stoppingTimeFactor(c)*dt)}
-    c.vx=c.dir*(speed<.4?0:speed);c.vy=0;c.y=-238;c.angle=c.dir>0?0:Math.PI;c.affected=false;c.z=0;c.omega=0;
-  }
-  for(const [a,b]of tramCouplers())if(!a.derailed&&!b.derailed){const speed=Math.min(Math.abs(a.vx),Math.abs(b.vx));a.vx=b.vx=a.dir*speed;b.x=a.x-a.dir*122}
-}
+function solveTramCouplers(){/* Rigid composition: visual links need no physical solver. */}
+function derailArticulatedTram(){/* This rail-guided composition cannot derail or tip. */}
+function updateTramMotion(dt){moveRigidTrams(dt)}
 function meshFaceDepth(points){return points.reduce((sum,p)=>sum+(replayView?securityDepth(...p):p[0]+p[1]+p[2]*1.6),0)/points.length}
 function tramFaceVisible(c,u,v,z,nu,nv,nz){
   const p=carPoint(c,u,v,z),q=carPoint(c,u+nu,v+nv,z+nz),view=replayView?[SECURITY_POLE.x-p[0],SECURITY_POLE.y-p[1],SECURITY_POLE.z-p[2]]:[1,1,1.73];
@@ -3704,7 +3658,7 @@ const beachWalker=movePanickedPerson;movePanickedPerson=function(p,dt){if(p.bath
 const beachEscape=updatePedestrianEscapeProgress;updatePedestrianEscapeProgress=function(p,dt){if(!p.bather)beachEscape(p,dt)};
 const originalCoastInitializer=initializeMapRound;initializeMapRound=function(){originalCoastInitializer();tramSerial=0;configureMapCamera();if(activeMap===3)addBeachVisitors()};
 spawnTram=spawnArticulatedTram;derailTram=derailArticulatedTram;drawTram=drawRioTram;
-const otherVehicleLights=vehicleLightLayout;vehicleLightLayout=function(c){if(!c.tram)return otherVehicleLights(c);if(c.exploded||c.tramCabEnd===0)return{front:[],rear:[]};const lamps=[-10,10].map(v=>({model:c,u:(c.tramCabEnd||1)*55.4,v,z:18.5,width:2}));return{front:c.tramUnit===0?lamps:[],rear:c.tramUnit===2?lamps:[]}};
+const otherVehicleLights=vehicleLightLayout;vehicleLightLayout=function(c){if(!c.tram)return otherVehicleLights(c);if(c.exploded||c.tramCabEnd===0)return{front:[],rear:[]};const lamps=[-10,10].map(v=>({model:c,u:(c.tramCabEnd||1)*55.4,v,z:18.5,width:2}));return{front:c.tramUnit===0?lamps:[],rear:c.tramUnit===3?lamps:[]}};
 
 // The playfield is a world-space footprint, independent of the camera, zoom,
 // elevation and time of day. Tall objects retain their complete vertical shape.
@@ -3855,9 +3809,9 @@ function beginBeachFall(c){
   c.cliffStartX=c.x;c.cliffStartOffset=clamp(c.y-coastRoadY(c.x),177,210);c.cliffStartZ=Math.max(0,c.z);c.fallDepth=c.cliffStartZ;c.fallVelocity=6;c.vz=0;
   c.beachTargetX=chooseBeachBerth(c,c.x+clamp(c.vx*.28,-65,65));c.beachTargetOffset=263;
   c.beachTargetAngle=Math.atan(coastRoadSlope(c.beachTargetX))+(Math.cos(c.angle)<0?Math.PI:0);
-  c.cliffStartAngle=c.angle;c.cliffStartRoll=c.roll||0;c.cliffRollSign=(-Math.sin(c.angle)*c.vx+Math.cos(c.angle)*c.vy)>0?-1:1;
+  c.cliffStartAngle=c.angle;c.cliffStartRoll=c.roll||0;c.cliffRollSign=coastalOutwardRollSign(c);
   const start=c.cliffStartRoll,sign=c.cliffRollSign;
-  // An odd half-turn puts the roof down. Keep turning in the impact direction.
+  // Gravity tips the vehicle toward the sea, independently of its previous skid.
   c.beachTargetRoll=sign>0?(Math.floor((start-Math.PI)/TAU)+2)*TAU+Math.PI:(Math.ceil((start+Math.PI)/TAU)-2)*TAU-Math.PI;
   if(!c.rock&&state==='running'){const points=Math.round(1000*combo);score+=points;pointLabel(c.x,c.y,points,'CAPOTAMENTO');if(!c.hit){c.hit=true;hitCount++}updateHUD()}
 }
@@ -4148,8 +4102,8 @@ const landingRoundSetup=initializeMapRound;initializeMapRound=function(){landing
 
 // Same-direction headways let the shorter timetable produce real extra trips.
 function activeTramTraffic(){return cars.filter(c=>c.tram&&!c.derailed&&Math.abs(c.x)<1250)}
-function canTramEnter(){return new Set(cars.filter(c=>c.tram&&Math.abs(c.x)<1250).map(c=>c.trainId)).size<2&&!cars.some(c=>c.tram&&c.derailed&&Math.abs(c.x)<1250)}
-function tramTrafficDirection(){return activeTramTraffic()[0]?.dir||(Math.random()<.5?1:-1)}
+function canTramEnter(){return canEnterRigidTram()}
+function tramTrafficDirection(){return -1}
 
 // Small ambient birds follow coherent, bounded flock paths, independent of play.
 function createCoastalFlocks(){
@@ -5046,6 +5000,81 @@ function addBoxLiveryPanel(c,side){
   const points=[[-104,side*23.1,27],[38,side*23.1,27],[38,side*23.1,73],[-104,side*23.1,73]].map(p=>carPoint(c,...p));
   carrierMeshFaces.push({points,color:'#ffffff00',depth:meshFaceDepth(points),draw:()=>drawBoxLiveryPanel(c,side,points)});
 }
+
+// Four visible/collision sections share one rail controller and one brake curve.
+// No section has its own movement integration, suspension, coupling solver or roll.
+const RAIL_WAGONS=4,RAIL_SPACING=122,RAIL_ENTRY_X=980,RAIL_STOP_X=-650,RAIL_SPEED=355,RAIL_MASS=80,RAIL_INTERVAL=15;
+let railTrains=[];
+function synchronizeRailTrain(train){
+  for(const c of train.units){
+    c.x=train.headX+c.tramUnit*RAIL_SPACING;c.y=-238;c.z=0;c.vx=-train.speed;c.vy=0;c.vz=0;c.angle=Math.PI;c.omega=0;
+    c.dir=-1;c.railLocked=true;c.derailed=false;c.rollover=false;c.roll=0;c.rollLift=0;c.rollLanded=false;c.couplerBroken=false;c.affected=false;c.braking=train.braking;
+  }
+}
+function canEnterRigidTram(){
+  for(let unit=0;unit<RAIL_WAGONS;unit++){
+    const x=RAIL_ENTRY_X+unit*RAIL_SPACING;
+    if(cars.some(c=>!c.sunk&&!c.offCliff&&Math.abs(c.x-x)<(c.l+112)/2+18&&Math.abs(c.y+238)<(c.w+35)/2+8))return false;
+  }
+  return true;
+}
+function createRigidTram(){
+  if(!canEnterRigidTram())return false;
+  const id=++tramSerial,units=Array.from({length:RAIL_WAGONS},(_,unit)=>makeTramWagon(RAIL_ENTRY_X+unit*RAIL_SPACING,-1,id,unit));
+  const train={id,units,headX:RAIL_ENTRY_X,speed:RAIL_SPEED,braking:false,deceleration:0,stopX:RAIL_STOP_X,sparkClock:0,sparkIndex:0};
+  railTrains.push(train);synchronizeRailTrain(train);cars.push(...units);tramsSpawned++;nextTramAt=worldTime+RAIL_INTERVAL;return true;
+}
+function rigidTramBrakeSparks(train,dt){
+  if(!train.braking||train.speed<20){train.sparkClock=0;return}
+  train.sparkClock+=dt*7;
+  while(train.sparkClock>=1){
+    train.sparkClock--;const index=train.sparkIndex++,c=train.units[index%RAIL_WAGONS],p=carPoint(c,index%2?35:-36,index%3?17.3:-17.3,2);
+    if(!mapPointInside(p[0],p[1],2))continue;
+    const life=rand(.18,.32);particles.push({x:p[0],y:p[1],z:p[2],vx:rand(12,40),vy:rand(-7,7),vz:rand(10,25),life,max:life,size:rand(.65,1),color:'#f5c675',type:'spark',tramBrake:true});
+  }
+}
+function moveRigidTrams(dt){
+  // The first composition enters with the launch; subsequent entries stay 15 s apart.
+  if(state==='running'&&worldTime+1e-6>=nextTramAt&&canEnterRigidTram())createRigidTram();
+  const ordered=[...railTrains].sort((a,b)=>a.headX-b.headX);
+  for(let i=0;i<ordered.length;i++){
+    const train=ordered[i],ahead=i?ordered[i-1]:null;
+    for(const c of train.units)c.flash=Math.max(0,(c.flash||0)-dt);
+    if(state==='running'){
+      const stopX=Math.max(RAIL_STOP_X,ahead?ahead.headX+(RAIL_WAGONS-1)*RAIL_SPACING+128:-Infinity);
+      if(!train.braking){train.braking=true;train.stopX=stopX;train.deceleration=train.speed*train.speed/(2*Math.max(1,train.headX-stopX))}
+      train.stopX=Math.max(RAIL_STOP_X,stopX);
+      const remaining=Math.max(0,train.headX-train.stopX);
+      const deceleration=train.speed*train.speed/(2*Math.max(.00001,remaining));train.deceleration=deceleration;
+      const nextSpeed=Math.max(0,train.speed-deceleration*dt);
+      train.headX=Math.max(train.stopX,train.headX-(train.speed+nextSpeed)*.5*dt);train.speed=nextSpeed;
+      if(train.headX<=train.stopX+1e-5){train.headX=train.stopX;train.speed=0}
+    }else train.headX-=train.speed*dt;
+    synchronizeRailTrain(train);rigidTramBrakeSparks(train,dt);
+  }
+  railTrains=railTrains.filter(train=>train.headX+(RAIL_WAGONS-1)*RAIL_SPACING>-1600);
+}
+const beforeRigidRailRound=initializeMapRound;initializeMapRound=function(){beforeRigidRailRound();railTrains=[];nextTramAt=worldTime};
+const beforeRigidRailCity=updateCity;updateCity=function(dt){beforeRigidRailCity(dt);for(const train of railTrains)synchronizeRailTrain(train)};
+const beforeRigidRailWheels=vehicleWheelSlots;vehicleWheelSlots=function(c){return c.railLocked?[]:beforeRigidRailWheels(c)};
+function separateFromRigidRail(a,b,contact){
+  if(a.railLocked&&b.railLocked)return;
+  const other=a.railLocked?b:a,direction=a.railLocked?1:-1;
+  other.x+=contact.nx*(contact.depth+.025)*direction;other.y+=contact.ny*(contact.depth+.025)*direction;
+}
+const beforeRigidRailSeparation=separateVehiclePair;separateVehiclePair=function(a,b,contact){if(a.railLocked||b.railLocked)separateFromRigidRail(a,b,contact);else beforeRigidRailSeparation(a,b,contact)};
+const beforeRigidRailImpact=impact;impact=function(a,b,contact){
+  if(!a.railLocked&&!b.railLocked){beforeRigidRailImpact(a,b,contact);return}
+  if(a.railLocked&&b.railLocked)return;
+  const tram=a.railLocked?a:b,other=tram===a?b:a,train=railTrains.find(t=>t.id===tram.trainId),mass=tram.mass;
+  tram.mass=RAIL_MASS;
+  try{beforeRigidRailImpact(a,b,contact)}finally{tram.mass=mass;if(train)synchronizeRailTrain(train)}
+  const residual=collision(tram,other);if(residual)separateFromRigidRail(tram,other,residual);
+};
+const beforeRigidRailFuelHit=registerFuelImpact;registerFuelImpact=function(tanker,other,force){
+  const source=other.railLocked?(railTrains.find(t=>t.id===other.trainId)?.units[0]||other):other;
+  beforeRigidRailFuelHit(tanker,source,force);
+};
 
 let prev=0;function frame(t){const dt=Math.min((t-prev)/1000||0,.04);prev=t;let steps=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<steps;i++)update(dt/steps);render();requestAnimationFrame(frame)}
 document.addEventListener('visibilitychange',()=>{prev=performance.now()});newMatch();installViewportGuards();resize();updateSoundUI();requestAnimationFrame(frame);
